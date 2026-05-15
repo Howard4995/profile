@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Howard - 自我介紹</title>
+    <style>
+        :root {
+            --bg-color: #f7f9fa;
+            --surface-color: #ffffff;
+            --text-primary: #1f2328;
+            --text-secondary: #536471;
+            --border-color: #eff3f4;
+            --accent-color: #1d9bf0;
+            --hover-bg: #f7f9fa;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 🟢 個人簡介區塊 */
+        .profile-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            max-width: 900px;
+            width: 100%;
+            background: var(--surface-color);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+            box-sizing: border-box;
+        }
+        .profile-left {
+            flex: 1 1 300px;
+            text-align: center;
+        }
+        .profile-avatar-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--surface-color);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            display: block;
+        }
+        .profile-avatar-cat {
+            position: absolute;
+            width: 65px;
+            height: 50px;
+            top: -24px;
+            right: -15px;
+            z-index: 2;
+            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.28));
+            pointer-events: none;
+            transform: rotate(8deg);
+            transform-origin: 50% 80%;
+        }
+        .profile-avatar-wrap:hover .profile-avatar-cat {
+            animation: avatar-cat-peek 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes avatar-cat-peek {
+            0%, 100% { transform: translateY(0) rotate(8deg); }
+            45% { transform: translateY(-6px) rotate(3deg); }
+        }
+        .profile-name {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+        .profile-handle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-top: 4px;
+            margin-bottom: 20px;
+        }
+        .profile-intro {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .social-link {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid var(--border-color);
+        }
+        .social-link:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .social-link svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+        .profile-right {
+            flex: 1 1 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .info-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            width: 140px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .info-value {
+            flex: 1;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* 行動裝置模式 */
+        @media (max-width: 768px) {
+            .profile-section {
+                padding: 30px 20px;
+            }
+            .info-row {
+                flex-direction: column;
+            }
+            .info-label {
+                margin-bottom: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="profile-section">
+        <div class="profile-left">
+            <div class="profile-avatar-wrap" aria-label="Howard profile avatar">
+                <img src="icon.jpg" alt="Howard" class="profile-avatar">
+                <svg class="profile-avatar-cat" viewBox="0 0 120 92" aria-hidden="true">
+                    <path d="M18 56c-5-17 5-33 26-38 4-8 13-15 18-14 3 1 0 10 0 16 9 1 18 4 24 10 7 7 12 17 14 29 12-4 18 0 16 8-2 10-15 18-31 17H47C32 84 22 74 18 56Z" fill="#fff"/>
+                    <path d="M18 56c-5-17 5-33 26-38 4-8 13-15 18-14 3 1 0 10 0 16 9 1 18 4 24 10 7 7 12 17 14 29 12-4 18 0 16 8-2 10-15 18-31 17H47C32 84 22 74 18 56Z" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M45 22c-3-9-2-17 2-19 3-1 9 7 12 18" fill="#fff" stroke="#111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M38 65c-9 3-18 0-22-8" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>
+                    <path d="M85 66c8 5 17 4 24-3" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>
+                    <circle cx="55" cy="47" r="5" fill="#111"/>
+                    <circle cx="78" cy="50" r="5" fill="#111"/>
+                </svg>
+            </div>
+            <h2 class="profile-name">Howard</h2>
+            <div class="profile-handle">@Howard4995</div>
+            <div class="profile-intro">
+                我是Howard(≧∀≦)ゞ<br><br>
+                我靠好奇心和奶茶續命，另外其實 cola 也很喜歡，可是奶茶還是第一名喔。<br>
+                腦袋常在想：「AI 到底什麼時候會真正像人？」<br><br>
+                我喜歡共產、地獄梗、還有未來感世界觀。<br>
+                最近正在把 AI 當成能一起成長的存在。<br><br>
+                有時研究模型。<br>有時研究人類。<br>有時半夜看顯卡跑分看到破防。<br><br>
+                如果頻率對上了，<br>那就一起聊點瘋狂的未來(⸝⸝•̀֊•́⸝⸝)!
+            </div>
+            <div class="social-links">
+                <!-- X (Twitter) -->
+                <a href="https://x.com/Howard54278714" target="_blank" class="social-link" title="X (Twitter)">
+                    <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </a>
+                <!-- GitHub -->
+                <a href="https://github.com/Howard4995" target="_blank" class="social-link" title="GitHub">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.646 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.376.202 2.394.1 2.646.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+                </a>
+            </div>
+        </div>
+        <div class="profile-right">
+            <div class="info-row">
+                <div class="info-label">使用語言 & 技術</div>
+                <div class="info-value">C++, HTML5, CSS3, JavaScript, Python, Swift</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">基礎設施 & 工具</div>
+                <div class="info-value">AWS, Azure, Docker, Git, Linux, Huggingface</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">主要屬性</div>
+                <div class="info-value">前端開發者 (Frontend Developer), 學生, AI 研究愛好者</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">喜歡的事物</div>
+                <div class="info-value">奶茶, Cola, AI, 共產, 未來感世界觀, 半夜看顯卡跑分</div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
