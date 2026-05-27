@@ -1256,11 +1256,14 @@
                 status.textContent = '載入中...';
                 try {
                     const response = await fetch(`/api/journal/${entryId}`);
-                    if (!response.ok) throw new Error('Failed');
+                    if (!response.ok) {
+                        throw new Error(`Failed to load entry content: ${response.status}`);
+                    }
                     const html = await response.text();
                     body.innerHTML = html && html.trim() ? html : '<p>（此則日誌內容為空白）</p>';
                     card.dataset.loaded = 'true';
                 } catch (error) {
+                    console.error(error);
                     body.innerHTML = '<p>讀取失敗，請稍後再試。</p>';
                 } finally {
                     card.dataset.loading = 'false';
@@ -1326,7 +1329,9 @@
 
             try {
                 const response = await fetch('/api/journal');
-                if (!response.ok) throw new Error('Failed');
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch journal entries: ${response.status}`);
+                }
                 const data = await response.json();
                 const entries = Array.isArray(data.entries) ? data.entries : [];
 
@@ -1339,6 +1344,7 @@
 
                 entries.forEach(entry => listEl.appendChild(renderEntryCard(entry)));
             } catch (error) {
+                console.error(error);
                 if (loadingEl) loadingEl.hidden = true;
                 if (emptyEl) {
                     emptyEl.hidden = false;

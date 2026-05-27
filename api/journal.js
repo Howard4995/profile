@@ -2,9 +2,10 @@ const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const NOTION_DB_ID = process.env.NOTION_DB_ID;
 const NOTION_VERSION = '2022-06-28';
 const NOTION_API_BASE = 'https://api.notion.com/v1';
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
 
 const setCorsHeaders = (res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 };
@@ -81,6 +82,10 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ entries });
   } catch (error) {
-    return res.status(500).json({ error: 'Failed to fetch journal entries' });
+    console.error('Failed to fetch journal entries', error);
+    return res.status(500).json({
+      error: 'Failed to fetch journal entries',
+      details: error.message,
+    });
   }
 }
