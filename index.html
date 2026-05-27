@@ -407,6 +407,9 @@
             border: 1px solid var(--border-color);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+        .journal-card[role="button"] {
+            cursor: pointer;
+        }
         .journal-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
@@ -483,6 +486,55 @@
             color: var(--text-secondary);
             line-height: 1.65;
             margin-bottom: 12px;
+        }
+        .journal-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .journal-meta-item {
+            background: var(--hover-bg);
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+        .journal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .journal-tag {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--accent-color);
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            border: 1px solid var(--border-color);
+        }
+        .journal-entry-body {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-top: 10px;
+        }
+        .journal-entry-body p {
+            margin: 0 0 12px;
+        }
+        .journal-entry-body h2,
+        .journal-entry-body h3,
+        .journal-entry-body h4 {
+            color: var(--text-primary);
+            margin: 16px 0 8px;
+        }
+        .journal-entry-body ul {
+            margin: 0 0 12px;
+            padding-left: 22px;
+        }
+        .journal-entry-status {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
         }
         .journal-card-footer {
             display: flex;
@@ -1034,6 +1086,16 @@
                     <div class="journal-card-body" style="white-space: pre-wrap;">今天幾乎半天我都在意欲痛苦好想死真的好累哎我不求任何人可以理解我我只想死好累我每個月都會有幾次這樣所以我早就習慣來我不會大哭就留幾滴淚而已反正已經很多次了也不差這一次反正也不會改變什麼最</div>
                     <div class="journal-card-footer"><span class="journal-card-date">7月4日星期五</span></div>
                 </div>
+                <div class="month-label">Notion 日誌</div>
+                <div id="journalList" class="journal-list"></div>
+                <div id="journalLoading" class="journal-empty">
+                    <div class="journal-empty-icon">⏳</div>
+                    <div class="journal-empty-text">載入中...</div>
+                </div>
+                <div id="journalEmpty" class="journal-empty" hidden>
+                    <div class="journal-empty-icon">📝</div>
+                    <div class="journal-empty-text">目前沒有日誌。</div>
+                </div>
             </div>
 
         </div>
@@ -1096,49 +1158,198 @@
         });
 
         // ========== 評論式日誌卡片轉換 ==========
-        document.addEventListener("DOMContentLoaded", () => {
-            const cards = document.querySelectorAll('.journal-card');
-            cards.forEach(card => {
-                const dateSpan = card.querySelector('.journal-card-date');
-                const dateText = dateSpan ? dateSpan.textContent : '';
+        const formatJournalCard = (card) => {
+            if (!card || card.dataset.formatted === 'true') return;
 
-                const footer = card.querySelector('.journal-card-footer');
-                if (footer) {
-                    footer.remove();
-                }
+            const dateSpan = card.querySelector('.journal-card-date');
+            const dateText = dateSpan ? dateSpan.textContent : '';
 
-                const contentNodes = [];
-                while (card.firstChild) {
-                    contentNodes.push(card.removeChild(card.firstChild));
-                }
+            const footer = card.querySelector('.journal-card-footer');
+            if (footer) {
+                footer.remove();
+            }
 
-                const avatarWrap = document.createElement('div');
-                avatarWrap.className = 'journal-avatar-wrap';
-                avatarWrap.innerHTML = `
-                    <img src="icon.jpg" alt="Howard" class="journal-avatar">
-                    <div class="journal-badge">
-                        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                `;
+            const contentNodes = [];
+            while (card.firstChild) {
+                contentNodes.push(card.removeChild(card.firstChild));
+            }
 
-                const contentWrap = document.createElement('div');
-                contentWrap.className = 'journal-card-content';
+            const avatarWrap = document.createElement('div');
+            avatarWrap.className = 'journal-avatar-wrap';
+            avatarWrap.innerHTML = `
+                <img src="icon.jpg" alt="Howard" class="journal-avatar">
+                <div class="journal-badge">
+                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+            `;
 
-                const header = document.createElement('div');
-                header.className = 'journal-card-header';
-                header.innerHTML = `
-                    <span class="journal-card-author">Howard</span>
-                    <span class="journal-card-date">${dateText}</span>
-                `;
-                contentWrap.appendChild(header);
+            const contentWrap = document.createElement('div');
+            contentWrap.className = 'journal-card-content';
 
-                contentNodes.forEach(node => {
-                    contentWrap.appendChild(node);
-                });
+            const header = document.createElement('div');
+            header.className = 'journal-card-header';
+            header.innerHTML = `
+                <span class="journal-card-author">Howard</span>
+                <span class="journal-card-date">${dateText}</span>
+            `;
+            contentWrap.appendChild(header);
 
-                card.appendChild(avatarWrap);
-                card.appendChild(contentWrap);
+            contentNodes.forEach(node => {
+                contentWrap.appendChild(node);
             });
+
+            card.appendChild(avatarWrap);
+            card.appendChild(contentWrap);
+            card.dataset.formatted = 'true';
+        };
+
+        const escapeHtml = (value) => {
+            const text = String(value || '');
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        };
+
+        const formatDate = (value) => {
+            if (!value) return '';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return value;
+            return date.toLocaleDateString('zh-TW', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        };
+
+        const buildMetaItem = (label, value) => {
+            if (!value) return null;
+            const span = document.createElement('span');
+            span.className = 'journal-meta-item';
+            span.textContent = `${label}：${value}`;
+            return span;
+        };
+
+        const buildTag = (label) => {
+            const tag = document.createElement('span');
+            tag.className = 'journal-tag';
+            tag.textContent = label;
+            return tag;
+        };
+
+        const toggleEntry = async (card) => {
+            const entryId = card.dataset.entryId;
+            const body = card.querySelector('.journal-entry-body');
+            const status = card.querySelector('.journal-entry-status');
+            if (!entryId || !body || !status) return;
+
+            if (!body.hidden) {
+                body.hidden = true;
+                status.textContent = '點擊展開內容';
+                return;
+            }
+
+            if (!card.dataset.loaded && card.dataset.loading !== 'true') {
+                card.dataset.loading = 'true';
+                status.textContent = '載入中...';
+                try {
+                    const response = await fetch(`/api/journal/${entryId}`);
+                    if (!response.ok) throw new Error('Failed');
+                    const html = await response.text();
+                    body.innerHTML = html && html.trim() ? html : '<p>（此則日誌內容為空白）</p>';
+                    card.dataset.loaded = 'true';
+                } catch (error) {
+                    body.innerHTML = '<p>讀取失敗，請稍後再試。</p>';
+                } finally {
+                    card.dataset.loading = 'false';
+                }
+            }
+
+            body.hidden = false;
+            status.textContent = '點擊收起';
+        };
+
+        const renderEntryCard = (entry) => {
+            const card = document.createElement('div');
+            card.className = 'journal-card';
+            card.setAttribute('role', 'button');
+            card.dataset.entryId = entry.id;
+
+            const title = document.createElement('div');
+            title.className = 'journal-card-title';
+            title.textContent = entry.title || '（無標題）';
+
+            const meta = document.createElement('div');
+            meta.className = 'journal-meta';
+            const mood = buildMetaItem('Mood', entry.mood);
+            const energy = buildMetaItem('Energy', entry.energy);
+            if (mood) meta.appendChild(mood);
+            if (energy) meta.appendChild(energy);
+
+            const tagsWrap = document.createElement('div');
+            tagsWrap.className = 'journal-tags';
+            if (Array.isArray(entry.tags)) {
+                entry.tags.forEach(tag => tagsWrap.appendChild(buildTag(tag)));
+            }
+
+            const status = document.createElement('div');
+            status.className = 'journal-entry-status';
+            status.textContent = '點擊展開內容';
+
+            const body = document.createElement('div');
+            body.className = 'journal-entry-body';
+            body.hidden = true;
+
+            const footer = document.createElement('div');
+            footer.className = 'journal-card-footer';
+            footer.innerHTML = `<span class="journal-card-date">${escapeHtml(formatDate(entry.date))}</span>`;
+
+            card.appendChild(title);
+            if (meta.children.length) card.appendChild(meta);
+            if (tagsWrap.children.length) card.appendChild(tagsWrap);
+            card.appendChild(status);
+            card.appendChild(body);
+            card.appendChild(footer);
+
+            formatJournalCard(card);
+            card.addEventListener('click', () => toggleEntry(card));
+            return card;
+        };
+
+        const loadJournalEntries = async () => {
+            const listEl = document.getElementById('journalList');
+            const loadingEl = document.getElementById('journalLoading');
+            const emptyEl = document.getElementById('journalEmpty');
+            if (!listEl) return;
+
+            try {
+                const response = await fetch('/api/journal');
+                if (!response.ok) throw new Error('Failed');
+                const data = await response.json();
+                const entries = Array.isArray(data.entries) ? data.entries : [];
+
+                loadingEl.hidden = true;
+
+                if (!entries.length) {
+                    emptyEl.hidden = false;
+                    return;
+                }
+
+                entries.forEach(entry => listEl.appendChild(renderEntryCard(entry)));
+            } catch (error) {
+                if (loadingEl) loadingEl.hidden = true;
+                if (emptyEl) {
+                    emptyEl.hidden = false;
+                    emptyEl.querySelector('.journal-empty-text').textContent = '日誌載入失敗。';
+                }
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll('.journal-card').forEach(formatJournalCard);
+            loadJournalEntries();
         });
     </script>
 
