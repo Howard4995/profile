@@ -9,7 +9,7 @@ const setCorsHeaders = (res) => {
 };
 
 const escapeHtml = (value) =>
-  value
+  String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

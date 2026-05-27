@@ -1216,7 +1216,7 @@
         const formatDate = (value) => {
             if (!value) return '';
             const date = new Date(value);
-            if (Number.isNaN(date.getTime())) return value;
+            if (isNaN(date.getTime())) return value;
             return date.toLocaleDateString('zh-TW', {
                 year: 'numeric',
                 month: 'long',
@@ -1251,7 +1251,7 @@
                 return;
             }
 
-            if (!card.dataset.loaded && card.dataset.loading !== 'true') {
+            if (card.dataset.loaded !== 'true' && card.dataset.loading !== 'true') {
                 card.dataset.loading = 'true';
                 status.textContent = '載入中...';
                 try {
