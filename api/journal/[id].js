@@ -113,7 +113,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Notion configuration missing' });
   }
 
-  const { id } = req.query || {};
+  const { id } = req.query;
   if (!id) {
     return res.status(400).json({ error: 'Missing journal id' });
   }

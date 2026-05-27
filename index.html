@@ -1233,6 +1233,21 @@
                     const allowedAttr = isAnchor && ['href', 'target', 'rel'].includes(attr.name);
                     if (!allowedAttr) node.removeAttribute(attr.name);
                 });
+
+                if (node.tagName === 'A') {
+                    const href = node.getAttribute('href');
+                    if (href) {
+                        try {
+                            const url = new URL(href, window.location.origin);
+                            const allowedProtocols = ['http:', 'https:', 'mailto:'];
+                            if (!allowedProtocols.includes(url.protocol)) {
+                                node.removeAttribute('href');
+                            }
+                        } catch (error) {
+                            node.removeAttribute('href');
+                        }
+                    }
+                }
             }
 
             nodesToRemove.forEach((node) => node.remove());
@@ -1270,7 +1285,11 @@
             const body = card.querySelector('.journal-entry-body');
             const status = card.querySelector('.journal-entry-status');
             if (!entryId || !body || !status) {
-                console.warn('Missing journal entry elements', { entryId, body, status });
+                console.warn('Missing journal entry elements', {
+                    entryId,
+                    hasBody: Boolean(body),
+                    hasStatus: Boolean(status)
+                });
                 return;
             }
 
@@ -1290,7 +1309,7 @@
                     }
                     const html = await response.text();
                     const safeHtml = sanitizeHtml(html);
-                    body.innerHTML = safeHtml && safeHtml.trim() ? safeHtml : '<p>（此則日誌內容為空白）</p>';
+                    body.innerHTML = safeHtml.trim() ? safeHtml : '<p>（此則日誌內容為空白）</p>';
                     card.dataset.loaded = 'true';
                 } catch (error) {
                     console.error(error);
