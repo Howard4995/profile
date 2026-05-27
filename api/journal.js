@@ -1,7 +1,9 @@
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const NOTION_DB_ID = process.env.NOTION_DB_ID;
+// Default pinned to a stable Notion API version; override with NOTION_VERSION if needed.
 const NOTION_VERSION = process.env.NOTION_VERSION || '2022-06-28';
 const NOTION_API_BASE = 'https://api.notion.com/v1';
+// WARNING: Set ALLOWED_ORIGIN in production to restrict CORS.
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
 
 const setCorsHeaders = (res) => {

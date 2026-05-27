@@ -1203,16 +1203,6 @@
             card.dataset.formatted = 'true';
         };
 
-        const escapeHtml = (value) => {
-            const text = String(value || '');
-            return text
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        };
-
         const sanitizeHtml = (html) => {
             const template = document.createElement('template');
             template.innerHTML = html || '';
@@ -1247,6 +1237,13 @@
                         } catch (error) {
                             node.removeAttribute('href');
                         }
+                    } else {
+                        node.removeAttribute('href');
+                    }
+
+                    if (node.getAttribute('href')) {
+                        node.setAttribute('target', '_blank');
+                        node.setAttribute('rel', 'noopener noreferrer');
                     }
                 }
             }
@@ -1285,12 +1282,15 @@
             const entryId = card.dataset.entryId;
             const body = card.querySelector('.journal-entry-body');
             const status = card.querySelector('.journal-entry-status');
+            const shouldLog = window.location.hostname === 'localhost';
             if (!entryId || !body || !status) {
-                console.warn('Skipping journal entry toggle: missing required elements.', {
-                    entryId,
-                    hasBody: Boolean(body),
-                    hasStatus: Boolean(status)
-                });
+                if (shouldLog) {
+                    console.warn('Skipping journal entry toggle: missing required elements.', {
+                        entryId,
+                        hasBody: Boolean(body),
+                        hasStatus: Boolean(status)
+                    });
+                }
                 return;
             }
 
@@ -1357,7 +1357,10 @@
 
             const footer = document.createElement('div');
             footer.className = 'journal-card-footer';
-            footer.innerHTML = `<span class="journal-card-date">${escapeHtml(formatDate(entry.date))}</span>`;
+            const footerDate = document.createElement('span');
+            footerDate.className = 'journal-card-date';
+            footerDate.textContent = formatDate(entry.date);
+            footer.appendChild(footerDate);
 
             card.appendChild(title);
             if (meta.children.length) card.appendChild(meta);
