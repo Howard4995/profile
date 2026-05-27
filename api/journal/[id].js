@@ -1,5 +1,5 @@
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
-const NOTION_VERSION = '2022-06-28';
+const NOTION_VERSION = process.env.NOTION_VERSION || '2022-06-28';
 const NOTION_API_BASE = 'https://api.notion.com/v1';
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
 
@@ -129,7 +129,11 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      return res.status(response.status).json({ error: 'Notion API error', details: errorText });
+      console.error('Notion API error', errorText);
+      return res.status(response.status).json({
+        error: 'Notion API error',
+        details: response.statusText,
+      });
     }
 
     const data = await response.json();

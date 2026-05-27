@@ -1159,7 +1159,7 @@
 
         // ========== 評論式日誌卡片轉換 ==========
         const formatJournalCard = (card) => {
-            if (!card || card.dataset.formatted === 'true') return;
+            if (!(card instanceof HTMLElement) || card.dataset.formatted === 'true') return;
 
             const dateSpan = card.querySelector('.journal-card-date');
             const dateText = dateSpan ? dateSpan.textContent : '';
@@ -1217,6 +1217,7 @@
             const template = document.createElement('template');
             template.innerHTML = html || '';
 
+            // Includes U/S for underline + strikethrough annotations from Notion.
             const allowedTags = new Set(['P', 'BR', 'H2', 'H3', 'H4', 'UL', 'LI', 'CODE', 'STRONG', 'EM', 'U', 'S', 'A']);
             const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT);
             const nodesToRemove = [];
@@ -1285,7 +1286,7 @@
             const body = card.querySelector('.journal-entry-body');
             const status = card.querySelector('.journal-entry-status');
             if (!entryId || !body || !status) {
-                console.warn('Missing journal entry elements', {
+                console.warn('Skipping journal entry toggle: missing required elements.', {
                     entryId,
                     hasBody: Boolean(body),
                     hasStatus: Boolean(status)
@@ -1305,7 +1306,7 @@
                 try {
                     const response = await fetch(`/api/journal/${entryId}`);
                     if (!response.ok) {
-                        throw new Error(`Failed to load entry content: ${response.status} ${response.statusText}`);
+                        throw new Error(`Unable to load journal entry (${response.status} ${response.statusText}).`);
                     }
                     const html = await response.text();
                     const safeHtml = sanitizeHtml(html);
@@ -1379,7 +1380,7 @@
             try {
                 const response = await fetch('/api/journal');
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch journal entries: ${response.status} ${response.statusText}`);
+                    throw new Error(`Unable to fetch journal entries (${response.status} ${response.statusText}).`);
                 }
                 const data = await response.json();
                 const entries = Array.isArray(data.entries) ? data.entries : [];
