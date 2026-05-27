@@ -3,42 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Howard - 自我介紹</title>
+    <title>Howard - 個人頁面</title>
     <style>
         :root {
-            --bg-color: #f7f9fa;
+            --bg-color: #fdfbf7;
             --surface-color: #ffffff;
-            --text-primary: #1f2328;
-            --text-secondary: #536471;
-            --border-color: #eff3f4;
-            --accent-color: #1d9bf0;
-            --hover-bg: #f7f9fa;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --border-color: #e5e5ea;
+            --accent-color: #f5a623;
+            --hover-bg: #f5f5f7;
+            --apple-ease: cubic-bezier(0.16, 1, 0.3, 1);
         }
-        
+
+        /* 日誌專屬黑暗/抑鬱主題 */
+        body.dark-theme {
+            --bg-color: #121213; /* 深灰近黑 */
+            --surface-color: #1c1c1e; /* 黑暗卡片底色 */
+            --text-primary: #e5e2d9; /* 顯眼但非純白的骨白/象牙色 */
+            --text-secondary: #a5a29a; /* 提升對比度後的溫和沙灰色，確保日記內容清晰易讀 */
+            --border-color: #38383a;
+            --accent-color: #909297; /* 略微調亮後的冷淡灰色，用於日期等輔助資訊 */
+            --hover-bg: rgba(255, 255, 255, 0.06);
+        }
+
+        body.dark-theme .hamburger-btn {
+            background: rgba(28, 28, 30, 0.8);
+        }
+        body.dark-theme .hamburger-btn .bar {
+            background: var(--text-primary);
+        }
+        body.dark-theme .side-menu {
+            background: rgba(28, 28, 30, 0.85);
+            border-left: 1px solid rgba(255,255,255,0.05);
+        }
+        body.dark-theme .menu-overlay {
+            background: rgba(0,0,0,0.6);
+        }
+
+        * { box-sizing: border-box; }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
             margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 0;
             min-height: 100vh;
+            transition: background-color 0.5s var(--apple-ease);
         }
 
-        /* 🟢 個人簡介區塊 */
+        /* ========== 漢堡選單按鈕 ========== */
+        .hamburger-btn {
+            position: fixed;
+            top: 18px;
+            right: 20px;
+            z-index: 300;
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.4s var(--apple-ease);
+        }
+        .hamburger-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+        .hamburger-btn:active {
+            transform: scale(0.95);
+        }
+        .hamburger-btn .bar {
+            width: 18px;
+            height: 2px;
+            background: var(--text-primary);
+            border-radius: 2px;
+            transition: all 0.4s var(--apple-ease);
+        }
+        /* 打開時的 X 動畫 */
+        .hamburger-btn.open {
+            background: var(--surface-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .hamburger-btn.open .bar:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+        .hamburger-btn.open .bar:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+        .hamburger-btn.open .bar:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+
+        /* ========== 側邊選單 ========== */
+        .menu-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 199;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s var(--apple-ease);
+        }
+        .menu-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .side-menu {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 320px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 200;
+            box-shadow: -8px 0 40px rgba(0,0,0,0.05);
+            transition: right 0.6s var(--apple-ease);
+            display: flex;
+            flex-direction: column;
+            padding: 80px 0 30px;
+            border-left: 1px solid rgba(255,255,255,0.4);
+        }
+        .side-menu.open {
+            right: 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 32px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            text-align: left;
+            transition: all 0.3s var(--apple-ease);
+            position: relative;
+            transform: translateX(20px);
+            opacity: 0;
+        }
+        .side-menu.open .menu-item {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .side-menu.open .menu-item:nth-child(1) { transition-delay: 0.1s; }
+        .side-menu.open .menu-item:nth-child(2) { transition-delay: 0.15s; }
+
+        .menu-item:hover {
+            color: var(--text-primary);
+            background: rgba(0,0,0,0.02);
+        }
+        .menu-item.active {
+            color: var(--accent-color);
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 12px 24px;
+        }
+
+        .menu-footer {
+            margin-top: auto;
+            padding: 0 32px;
+            font-size: 0.78rem;
+            color: #b0b8c1;
+            line-height: 1.5;
+        }
+
+        /* ========== 頁面容器 ========== */
+        .page-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px 60px;
+            min-height: 100vh;
+            align-items: center;
+        }
+        /* 日誌頁面不需要垂直居中 */
+        .page-wrapper.top-align {
+            align-items: flex-start;
+            padding-top: 40px;
+        }
+        .page-content {
+            max-width: 900px;
+            width: 100%;
+        }
+        .page-view {
+            display: none;
+            animation: pageFadeIn 0.6s var(--apple-ease) forwards;
+        }
+        .page-view.active {
+            display: block;
+        }
+        @keyframes pageFadeIn {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ========== 個人簡介（原有樣式） ========== */
         .profile-section {
             display: flex;
             flex-wrap: wrap;
             gap: 30px;
-            max-width: 900px;
             width: 100%;
             background: var(--surface-color);
             padding: 40px;
             border-radius: 24px;
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
-            box-sizing: border-box;
         }
         .profile-left {
             flex: 1 1 300px;
@@ -139,9 +329,7 @@
             border-bottom: 1px solid var(--border-color);
             font-size: 0.95rem;
         }
-        .info-row:last-child {
-            border-bottom: none;
-        }
+        .info-row:last-child { border-bottom: none; }
         .info-label {
             width: 140px;
             font-weight: 800;
@@ -153,77 +341,806 @@
             line-height: 1.6;
         }
 
-        /* 行動裝置模式 */
+        /* ========== 日誌頁面 ========== */
+        .journal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .journal-back {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: var(--surface-color);
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .journal-back:hover {
+            background: var(--hover-bg);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .journal-back svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .journal-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        /* 月份標題 */
+        .month-label {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin: 28px 0 14px;
+            padding-left: 4px;
+        }
+        .month-label:first-child {
+            margin-top: 0;
+        }
+
+        /* 日誌卡片 */
+        .journal-card {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            background: var(--surface-color);
+            border-radius: 18px;
+            padding: 22px 24px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .journal-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+        }
+
+        /* 評論式頭像排版 */
+        .journal-avatar-wrap {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+            display: block;
+        }
+        .journal-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid var(--border-color);
+            display: block;
+        }
+        .journal-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 15px;
+            height: 15px;
+            background: #1d9bf0; /* 藍色驗證打勾 */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid var(--surface-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+        .journal-badge svg {
+            width: 9px;
+            height: 9px;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 3.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .journal-card-content {
+            flex: 1;
+            min-width: 0; /* 防止溢出 */
+        }
+        .journal-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .journal-card-author {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+        .journal-card-date {
+            font-size: 0.82rem;
+            color: var(--accent-color);
+            font-weight: 500;
+        }
+        .journal-card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            line-height: 1.5;
+        }
+        .journal-card-body {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            line-height: 1.65;
+            margin-bottom: 12px;
+        }
+        .journal-card-footer {
+            display: flex;
+            align-items: center;
+        }
+        .journal-card-date {
+            font-size: 0.82rem;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        /* 空狀態 */
+        /* 心情圖標與標題區域 */
+        .journal-mood {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .mood-icon {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+        .mood-text {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .mood-type {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .mood-time {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .journal-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        .journal-empty-icon { font-size: 3rem; margin-bottom: 12px; }
+        .journal-empty-text { font-size: 1rem; }
+
+        /* ========== 行動裝置模式 ========== */
         @media (max-width: 768px) {
-            .profile-section {
-                padding: 30px 20px;
-            }
-            .info-row {
-                flex-direction: column;
-            }
-            .info-label {
-                margin-bottom: 6px;
-            }
+            .profile-section { padding: 30px 20px; }
+            .info-row { flex-direction: column; }
+            .info-label { margin-bottom: 6px; }
+            .side-menu { width: 260px; right: -260px; }
+            .journal-header { flex-wrap: wrap; }
         }
     </style>
 </head>
 <body>
 
-    <div class="profile-section">
-        <div class="profile-left">
-            <div class="profile-avatar-wrap" aria-label="Howard profile avatar">
-                <img src="icon.jpg" alt="Howard" class="profile-avatar">
-                <svg class="profile-avatar-cat" viewBox="0 0 120 92" aria-hidden="true">
-                    <path d="M18 56c-5-17 5-33 26-38 4-8 13-15 18-14 3 1 0 10 0 16 9 1 18 4 24 10 7 7 12 17 14 29 12-4 18 0 16 8-2 10-15 18-31 17H47C32 84 22 74 18 56Z" fill="#fff"/>
-                    <path d="M18 56c-5-17 5-33 26-38 4-8 13-15 18-14 3 1 0 10 0 16 9 1 18 4 24 10 7 7 12 17 14 29 12-4 18 0 16 8-2 10-15 18-31 17H47C32 84 22 74 18 56Z" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M45 22c-3-9-2-17 2-19 3-1 9 7 12 18" fill="#fff" stroke="#111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M38 65c-9 3-18 0-22-8" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>
-                    <path d="M85 66c8 5 17 4 24-3" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>
-                    <circle cx="55" cy="47" r="5" fill="#111"/>
-                    <circle cx="78" cy="50" r="5" fill="#111"/>
-                </svg>
+    <!-- 🟢 漢堡按鈕 -->
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+    </button>
+
+    <!-- 🟢 遮罩 -->
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+
+    <!-- 🟢 側邊選單 -->
+    <nav class="side-menu" id="sideMenu">
+        <button class="menu-item active" data-page="profile" onclick="switchPage('profile')">
+            首頁
+        </button>
+        <button class="menu-item" data-page="journal" onclick="switchPage('journal')">
+            日誌
+        </button>
+        <div class="menu-divider"></div>
+        <div class="menu-footer">Howard © 2026</div>
+    </nav>
+
+    <!-- 🟢 頁面內容 -->
+    <div class="page-wrapper" id="pageWrapper">
+        <div class="page-content">
+
+            <!-- ========== 自我介紹頁 ========== -->
+            <div class="page-view active" id="page-profile">
+                <div class="profile-section">
+                    <div class="profile-left">
+                        <div class="profile-avatar-wrap" aria-label="Howard profile avatar">
+                            <img src="icon.jpg" alt="Howard" class="profile-avatar">
+                            <svg class="profile-avatar-cat" viewBox="0 0 120 92" aria-hidden="true">
+                                <path d="M18 56c-5-17 5-33 26-38 4-8 13-15 18-14 3 1 0 10 0 16 9 1 18 4 24 10 7 7 12 17 14 29 12-4 18 0 16 8-2 10-15 18-31 17H47C32 84 22 74 18 56Z" fill="#fff"/>
+                                <path d="M18 56c-5-17 5-33 26-38 4-8 13-15 18-14 3 1 0 10 0 16 9 1 18 4 24 10 7 7 12 17 14 29 12-4 18 0 16 8-2 10-15 18-31 17H47C32 84 22 74 18 56Z" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M45 22c-3-9-2-17 2-19 3-1 9 7 12 18" fill="#fff" stroke="#111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M38 65c-9 3-18 0-22-8" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>
+                                <path d="M85 66c8 5 17 4 24-3" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>
+                                <circle cx="55" cy="47" r="5" fill="#111"/>
+                                <circle cx="78" cy="50" r="5" fill="#111"/>
+                            </svg>
+                        </div>
+                        <h2 class="profile-name">Howard</h2>
+                        <div class="profile-handle">@Howard4995</div>
+                        <div class="profile-intro">
+                            我是Howard(≧∀≦)ゞ<br><br>
+                            我靠好奇心和奶茶續命，另外其實 cola 也很喜歡，可是奶茶還是第一名喔。<br>
+                            腦袋常在想：「AI 到底什麼時候會真正像人？」<br><br>
+                            我喜歡共產、地獄梗、還有未來感世界觀。<br>
+                            最近正在把 AI 當成能一起成長的存在。<br><br>
+                            有時研究模型。<br>有時研究人類。<br>有時半夜看顯卡跑分看到破防。<br><br>
+                            如果頻率對上了，<br>那就一起聊點瘋狂的未來(⸝⸝•̀֊•́⸝⸝)!
+                        </div>
+                        <div class="social-links">
+                            <a href="https://x.com/Howard54278714" target="_blank" class="social-link" title="X (Twitter)">
+                                <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            </a>
+                            <a href="https://github.com/Howard4995" target="_blank" class="social-link" title="GitHub">
+                                <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.646 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.376.202 2.394.1 2.646.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="profile-right">
+                        <div class="info-row">
+                            <div class="info-label">使用語言 &amp; 技術</div>
+                            <div class="info-value">C++, HTML5, CSS3, JavaScript, Python, Swift</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">基礎設施 &amp; 工具</div>
+                            <div class="info-value">AWS, Azure, Docker, Git, Linux, Huggingface</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">主要屬性</div>
+                            <div class="info-value">前端開發者 (Frontend Developer), 學生, AI 研究愛好者</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">喜歡的事物</div>
+                            <div class="info-value">奶茶, Cola, AI, 共產, 未來感世界觀, 半夜看顯卡跑分</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <h2 class="profile-name">Howard</h2>
-            <div class="profile-handle">@Howard4995</div>
-            <div class="profile-intro">
-                我是Howard(≧∀≦)ゞ<br><br>
-                我靠好奇心和奶茶續命，另外其實 cola 也很喜歡，可是奶茶還是第一名喔。<br>
-                腦袋常在想：「AI 到底什麼時候會真正像人？」<br><br>
-                我喜歡共產、地獄梗、還有未來感世界觀。<br>
-                最近正在把 AI 當成能一起成長的存在。<br><br>
-                有時研究模型。<br>有時研究人類。<br>有時半夜看顯卡跑分看到破防。<br><br>
-                如果頻率對上了，<br>那就一起聊點瘋狂的未來(⸝⸝•̀֊•́⸝⸝)!
+
+            <!-- ========== 日誌頁 ========== -->
+            <div class="page-view" id="page-journal">
+                <div class="journal-header">
+                    <button class="journal-back" onclick="switchPage('profile')" title="返回">
+                        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <div class="journal-title">日誌</div>
+                </div>
+
+                <!-- 2026年 5月 -->
+                <div class="month-label">2026年 5月</div>
+                <div class="journal-card">
+                    <div class="journal-mood">
+                        <svg class="mood-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="moodGradTired" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--accent-color)" />
+                                    <stop offset="100%" stop-color="#7f8794" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 10 C 60 40, 90 40, 90 50 C 90 60, 60 60, 50 90 C 40 60, 10 60, 10 50 C 10 40, 40 40, 50 10 Z" fill="url(#moodGradTired)" opacity="0.8"/>
+                            <path d="M50 20 C 55 45, 80 45, 80 50 C 80 55, 55 55, 50 80 C 45 55, 20 55, 20 50 C 20 45, 45 45, 50 20 Z" fill="rgba(255,255,255,0.34)"/>
+                            <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.86"/>
+                        </svg>
+                        <div class="mood-text">
+                            <div class="mood-type">勞累</div>
+                            <div class="mood-time">凌晨 1:41</div>
+                        </div>
+                    </div>
+                    <div class="journal-card-body" style="white-space: pre-wrap;">花4個小時寫代碼，結果只有第一個小時是有用的，後面3個小時一直修改，最後又回到第一個小時的版本 :(
+</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">5月28日星期四</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-mood">
+                        <svg class="mood-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="moodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--accent-color)" />
+                                    <stop offset="100%" stop-color="#ff7eb3" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 10 C 60 40, 90 40, 90 50 C 90 60, 60 60, 50 90 C 40 60, 10 60, 10 50 C 10 40, 40 40, 50 10 Z" fill="url(#moodGrad)" opacity="0.8"/>
+                            <path d="M50 20 C 55 45, 80 45, 80 50 C 80 55, 55 55, 50 80 C 45 55, 20 55, 20 50 C 20 45, 45 45, 50 20 Z" fill="rgba(255,255,255,0.4)"/>
+                            <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.9"/>
+                        </svg>
+                        <div class="mood-text">
+                            <div class="mood-type">絕望、不堪負荷 / 焦慮、不堪負荷等等（教育）</div>
+                            <div class="mood-time">晚上 11:24</div>
+                        </div>
+                    </div>
+                    <div class="journal-card-body" style="white-space: pre-wrap;">完了，一切都完了，我沒救了，我真的沒救了，每天活著對我來說都是一種折磨。
+<div style="background: var(--hover-bg); padding: 10px 14px; border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 附帶圖片</div></div>
+                    <div class="journal-card-footer"><span class="journal-card-date">5月25日星期一</span></div>
+                </div>
+
+                <!-- 2026年 4月 -->
+                <div class="month-label">2026年 4月</div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">我應該逃離這個讓我悲傷的地方換個地方忘掉這一切重新開始，但要錢路不轉人轉嘛，換個世界吧
+<div style="background: var(--hover-bg); padding: 10px 14px; border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 附帶圖片</div></div>
+                    <div class="journal-card-footer"><span class="journal-card-date">4月8日星期三</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">我我是個賭徒每天起來我都在賭，賭什麼時候可以被車撞死，我渴望在過馬路時結束</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">4月1日星期三</span></div>
+                </div>
+
+                <!-- 2026年 3月 -->
+                <div class="month-label">2026年 3月</div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">人類
+<div style="background: var(--hover-bg); padding: 10px 14px; border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 附帶圖片</div></div>
+                    <div class="journal-card-footer"><span class="journal-card-date">3月25日星期三</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">每次看到
+<div style="background: var(--hover-bg); padding: 10px 14px; border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 附帶圖片</div></div>
+                    <div class="journal-card-footer"><span class="journal-card-date">3月9日星期一</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">如果說性愛是身體上的鴉片 那宗教就是精神上的鴉片</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">3月2日星期一</span></div>
+                </div>
+
+                <!-- 2026年 2月 -->
+                <div class="month-label">2026年 2月</div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">救贖
+每個人都需要救贖
+因為不完美所以需要救贖
+我多們希望現在還有救贖卷
+現代人真的太需要了
+我們沒時間扶老奶奶過馬路
+卻可以每個月給孤兒院捐錢
+救贖過錯能用金錢所彌補
+也許我們這樣就是完美的人了
+可是圓在放大終究不是圓</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">2月28日星期六</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">救贖 每個人都需要救贖 因為不完美所以需要救贖</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">2月</span></div>
+                </div>
+
+                <!-- 2026年 1月 -->
+                <div class="month-label">2026年 1月</div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">討厭所有人所有事 不知道為什麼我感覺又要開始了</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">1月20日星期二</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">好看喜歡
+<div style="background: var(--hover-bg); padding: 10px 14px; border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 附帶圖片</div></div>
+                    <div class="journal-card-footer"><span class="journal-card-date">1月19日星期一</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">(一) 時間複雜 754:$6$7963$3$、～%_你能找到這串字符的規律嗎？不能。因為他不是出自算法而是我打的所以沒規律的是時間是複雜的但我打複雜你是無法感受到的我討厭時間嗎？是的我討厭因為時間是倒數的見面就開始離別了
+
+(二) 我對三次元沒有興趣只對二次元有興趣原本以為是中二後來才發現是魯蛇最後的尊嚴吧了</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">1月18日星期日</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">以前不理解怎麼會有人喜歡病嬌這種東西現在我理解了就是像我這樣缺愛的人需要用這種病態強制性的愛才能彌補我那黑洞般的不安全感</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">1月11日星期日</span></div>
+                </div>
+
+                <!-- 2025年 12月 -->
+                <div class="month-label">2025年 12月</div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">不知道為什麼感覺在跨年的最後幾個小時自殺挺好的剛好是個結束哈哈我突然意識到我已經孤單到這種討厭節慶的心態了因為在節慶特別凸顯了我的孤單真的真的好討厭啊</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">12月31日星期三</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">祝我可以早點結束痛苦我自殺是一定要成功</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">12月12日星期五</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">今天我在和我朋友 lunchtime 時他正在興致勃勃的和我述說著 GTA 的新版本更新，說著說著他突然天外飛來一筆.他說我朋友的媽媽過世了他原本抗癌成功但得了敗血症沒過多久就死了他說他對他媽朋友的死其實沒什麼感覺這時我說敗血症是什麼他說他也不知道然後他接著說回歸正題他又繼續聊起了 GTA 更新。</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">12月11日星期四</span></div>
+                </div>
+
+                <!-- 2025年 11月 -->
+                <div class="month-label">2025年 11月</div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">耳朵已經聽不到外面的聲音我感受到心臟在加速我跨欄了幾個人看他們倒在地上周圍的人本想幫助他但我的逼近 他看向我的眼神充滿恐懼我看到了他的瞳孔在顫抖他像是看到了死神的逼近他不得不拋棄他的孩子我對那位母親笑了笑那是友好的笑我從他身旁掠過我現在已經殺了 5.5 個了 .5 個是我射歪打中他的</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">11月25日星期二</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">今天我意識到我自己一個人時幾乎都在抑鬱狀態，我感覺如果我自己一個人在家一個禮拜我就會自殺了所以是不是代表只要自己孤獨一個禮拜我就會自殺了？</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">11月24日星期一</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">(一) 去死去死去死一想到我還活著好氣
+
+(二) 別人的人生：積極向上
+我的人生：積極向下
+悲劇的描寫 Be like:me
+死亡不是終點而是幸福的起點
+
+我活著會一直感到痛苦
+就像把魚放在陸地上
+而漁因該放在水裡
+就像我應該跳樓
+死亡不是終點</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">11月17日星期一</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-mood">
+                        <svg class="mood-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="moodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--accent-color)" />
+                                    <stop offset="100%" stop-color="#ff7eb3" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 10 C 60 40, 90 40, 90 50 C 90 60, 60 60, 50 90 C 40 60, 10 60, 10 50 C 10 40, 40 40, 50 10 Z" fill="url(#moodGrad)" opacity="0.8"/>
+                            <path d="M50 20 C 55 45, 80 45, 80 50 C 80 55, 55 55, 50 80 C 45 55, 20 55, 20 50 C 20 45, 45 45, 50 20 Z" fill="rgba(255,255,255,0.4)"/>
+                            <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.9"/>
+                        </svg>
+                        <div class="mood-text">
+                            <div class="mood-type">壓力大、絕望等等（自我照顧）</div>
+                            <div class="mood-time">凌晨 12:02</div>
+                        </div>
+                    </div>
+                    <div class="journal-card-body" style="white-space: pre-wrap;">操你媽沒底牌了打空了死死死</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">11月1日星期六</span></div>
+                </div>
+
+                <!-- 2025年 10月 -->
+                <div class="month-label">2025年 10月</div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">我的人生不是喜劇，也不是悲劇，是諷刺小說啊。
+（圖片手繪文字：the world -&gt; You want some this huh? / Me -&gt; No, kill me please / 操你媽世界）
+<div style="background: var(--hover-bg); padding: 10px 14px; border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 附帶圖片</div></div>
+                    <div class="journal-card-footer"><span class="journal-card-date">10月26日星期日</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">(一) 哎，他媽的，今天是2025年10月22日，又他媽的一個爛到骨子裡的狗屎日子，我從床上爬起來，感覺全身像被一堆屎壓著，頭痛得像腦袋裡有個該死的鑽頭在轉，為什麼醒來就覺得活著是場操蛋的噩夢？鏡子裡的我，看起來像個他媽的殭屍，眼睛紅腫得像被蜂蜇過，黑眼圈深得能藏屍體，為什麼我總是這麼醜陋不堪？早餐？操，吃你媽的早餐，我隨手抓了個過期的麵包，咬一口霉味直衝腦門，差點吐得滿地都是，想起小時
+
+(二) 今天是下雨天，我站在紅9公車的最前排看著雨水沿著巨大玻璃上順勢而下，公車走在橋上疾馳雨下的很大大到我看不清我的未來公車上的人跟我一樣迷茫，為唯一確定的事我要去監獄了</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">10月20日星期一</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">為什麼大家都不想死啊?我會建議正常人不要和抑鬱症的交朋友因為很辛苦你要花很多時間安淵他可是偏偏我就是那個人我就是很缺愛很需要愛的人啊</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">10月18日星期六</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">前幾天在 X 上找到的很喜歡因為他很符合我的喜好槍只不過站在一個軍事老的角度譴責穿這種衣服打戰第一個死的不要望命說實在的我無法接受蔚然的原因也是這個不符合 媽的這種上戰場不是死就是被操死不過
+<div style="background: var(--hover-bg); padding: 10px 14px; border-radius: 8px; color: var(--text-secondary); font-size: 0.85rem; margin-top: 12px; display: inline-flex; align-items: center; gap: 6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 附帶圖片</div></div>
+                    <div class="journal-card-footer"><span class="journal-card-date">10月16日星期四</span></div>
+                </div>
+
+                <!-- 2025年 9月 -->
+                <div class="month-label">2025年 9月</div>
+                <div class="journal-card">
+                    <div class="journal-mood">
+                        <svg class="mood-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="moodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--accent-color)" />
+                                    <stop offset="100%" stop-color="#ff7eb3" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 10 C 60 40, 90 40, 90 50 C 90 60, 60 60, 50 90 C 40 60, 10 60, 10 50 C 10 40, 40 40, 50 10 Z" fill="url(#moodGrad)" opacity="0.8"/>
+                            <path d="M50 20 C 55 45, 80 45, 80 50 C 80 55, 55 55, 50 80 C 45 55, 20 55, 20 50 C 20 45, 45 45, 50 20 Z" fill="rgba(255,255,255,0.4)"/>
+                            <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.9"/>
+                        </svg>
+                        <div class="mood-text">
+                            <div class="mood-type">平靜、漠然</div>
+                            <div class="mood-time">凌晨 1:33</div>
+                        </div>
+                    </div>
+                    <div class="journal-card-body" style="white-space: pre-wrap;">最終章：遺書
+是時候結束這一切了，逃離這該死的地獄吧
+草我原本以為拿到硝酸鈉就可以結束了，沒想到等了一個禮拜賣家居然沒確認訂單，一問之下缺貨，哈哈😂死前還這麼操蛋就對了，沒想到啊不知不覺就走到小時候說要自殺</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">9月28日星期日</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">幹我的人生就是個悲劇他媽的那時候他媽的就該帶好保險套就不該讓我這該死的出現草我和這個世界的關係就像強姦犯與被強姦犯我他媽 24x7 都在被他幹的痛不欲生我是他的一部分他卻是我的全部！！！他要不要點逼臉啊從我出生他就再開始操我了媽的死煉銅屁重點是這裡所有人都覺得痛苦很正常媽的說這就是人生這些人大概是被幹久了沒感覺了吧估計逼早就被操鬆了</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">9月25日星期四</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">痾事情是這樣的哎我不組織語言喝我想道什麼就寫什麼吧說說我現在的感受吧我感覺就像溫水煮青蛙一樣難受不是特別難受但就是不舒服只要想到自己還活著好翻我希望可以一直待在一個沒有人的空間裡我想講 any 互動和交流每講一句話都很累任 喔喔對了昨天晚上我終於買了亞硝酸鈉我感覺輕鬆多了終於要結束這一切了電影</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">9月21日星期日</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-mood" style="margin-bottom: 0;">
+                        <svg class="mood-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="moodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--accent-color)" />
+                                    <stop offset="100%" stop-color="#ff7eb3" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 10 C 60 40, 90 40, 90 50 C 90 60, 60 60, 50 90 C 40 60, 10 60, 10 50 C 10 40, 40 40, 50 10 Z" fill="url(#moodGrad)" opacity="0.8"/>
+                            <path d="M50 20 C 55 45, 80 45, 80 50 C 80 55, 55 55, 50 80 C 45 55, 20 55, 20 50 C 20 45, 45 45, 50 20 Z" fill="rgba(255,255,255,0.4)"/>
+                            <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.9"/>
+                        </svg>
+                        <div class="mood-text">
+                            <div class="mood-type">焦慮、害怕等等（朋友）</div>
+                            <div class="mood-time">晚上 10:53</div>
+                        </div>
+                    </div>
+                    <div class="journal-card-footer" style="margin-top: 16px;"><span class="journal-card-date">9月14日星期日</span></div>
+                </div>
+
+                <!-- 2025年 8月 -->
+                <div class="month-label">2025年 8月</div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">嘿很明顯我來寫這東西又是我抑鬱了 沒發生壞事就是痛苦 希望可以在開學前自殺勇敢一點 痾 不想寫了 幹真想被殺掉長這樣就可以順利進行的走了這種東西我也懶得求助也得不到吧哈，反正不是最近的事也已經七年了，最近比較強烈而已 幹我討厭這個世界幹殺了我吧 好難已經在走去刑場的路上很快一切就好了 對不起生而不人我很抱歉沒有任何東西是屬於</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">8月7日星期四</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-mood">
+                        <svg class="mood-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="moodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--accent-color)" />
+                                    <stop offset="100%" stop-color="#ff7eb3" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 10 C 60 40, 90 40, 90 50 C 90 60, 60 60, 50 90 C 40 60, 10 60, 10 50 C 10 40, 40 40, 50 10 Z" fill="url(#moodGrad)" opacity="0.8"/>
+                            <path d="M50 20 C 55 45, 80 45, 80 50 C 80 55, 55 55, 50 80 C 45 55, 20 55, 20 50 C 20 45, 45 45, 50 20 Z" fill="rgba(255,255,255,0.4)"/>
+                            <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.9"/>
+                        </svg>
+                        <div class="mood-text">
+                            <div class="mood-type">生氣（家人共享）</div>
+                            <div class="mood-time">下午 1:54</div>
+                        </div>
+                    </div>
+                    <div class="journal-card-footer"><span class="journal-card-date">8月2日星期六</span></div>
+                </div>
+
+                <!-- 2025年 7月 -->
+                <div class="month-label">2025年 7月</div>
+                <div class="journal-card">
+                    <div class="journal-mood">
+                        <svg class="mood-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="moodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--accent-color)" />
+                                    <stop offset="100%" stop-color="#ff7eb3" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 10 C 60 40, 90 40, 90 50 C 90 60, 60 60, 50 90 C 40 60, 10 60, 10 50 C 10 40, 40 40, 50 10 Z" fill="url(#moodGrad)" opacity="0.8"/>
+                            <path d="M50 20 C 55 45, 80 45, 80 50 C 80 55, 55 55, 50 80 C 45 55, 20 55, 20 50 C 20 45, 45 45, 50 20 Z" fill="rgba(255,255,255,0.4)"/>
+                            <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.9"/>
+                        </svg>
+                        <div class="mood-text">
+                            <div class="mood-type">害怕、寂寞等等</div>
+                            <div class="mood-time">晚上 11:11</div>
+                        </div>
+                    </div>
+                    <div class="journal-card-body" style="white-space: pre-wrap;">哎死累尷尬操笑死怎麼沒死呢</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">7月21日星期一</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-mood">
+                        <svg class="mood-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="moodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--accent-color)" />
+                                    <stop offset="100%" stop-color="#ff7eb3" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 10 C 60 40, 90 40, 90 50 C 90 60, 60 60, 50 90 C 40 60, 10 60, 10 50 C 10 40, 40 40, 50 10 Z" fill="url(#moodGrad)" opacity="0.8"/>
+                            <path d="M50 20 C 55 45, 80 45, 80 50 C 80 55, 55 55, 50 80 C 45 55, 20 55, 20 50 C 20 45, 45 45, 50 20 Z" fill="rgba(255,255,255,0.4)"/>
+                            <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.9"/>
+                        </svg>
+                        <div class="mood-text">
+                            <div class="mood-type">挫折、不堪負荷等等</div>
+                            <div class="mood-time">凌晨 2:49</div>
+                        </div>
+                    </div>
+                    <div class="journal-card-body" style="white-space: pre-wrap;">大概隔一個禮拜我又像自殺但我的心比以前更加平靜我放棄抵抗世界了我在等自殺他會慢慢一點點累積直到自殺完成我覺得快滿了我希望在開學前我可以死亡哎好累一切都沒了我也無法改變幹我真的受不了了我最</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">7月19日星期六</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap; font-style: italic; color: var(--text-secondary);">（此則日記內容為空白）</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">7月13日星期日</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-mood">
+                        <svg class="mood-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="moodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--accent-color)" />
+                                    <stop offset="100%" stop-color="#ff7eb3" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 10 C 60 40, 90 40, 90 50 C 90 60, 60 60, 50 90 C 40 60, 10 60, 10 50 C 10 40, 40 40, 50 10 Z" fill="url(#moodGrad)" opacity="0.8"/>
+                            <path d="M50 20 C 55 45, 80 45, 80 50 C 80 55, 55 55, 50 80 C 45 55, 20 55, 20 50 C 20 45, 45 45, 50 20 Z" fill="rgba(255,255,255,0.4)"/>
+                            <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.9"/>
+                        </svg>
+                        <div class="mood-text">
+                            <div class="mood-type">疲憊、不堪負荷 / 身分認同、心靈</div>
+                            <div class="mood-time">下午 4:23</div>
+                        </div>
+                    </div>
+                    <div class="journal-card-body" style="white-space: pre-wrap;">糟透了</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">7月11日星期五</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-mood">
+                        <svg class="mood-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="moodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--accent-color)" />
+                                    <stop offset="100%" stop-color="#ff7eb3" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 10 C 60 40, 90 40, 90 50 C 90 60, 60 60, 50 90 C 40 60, 10 60, 10 50 C 10 40, 40 40, 50 10 Z" fill="url(#moodGrad)" opacity="0.8"/>
+                            <path d="M50 20 C 55 45, 80 45, 80 50 C 80 55, 55 55, 50 80 C 45 55, 20 55, 20 50 C 20 45, 45 45, 50 20 Z" fill="rgba(255,255,255,0.4)"/>
+                            <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.9"/>
+                        </svg>
+                        <div class="mood-text">
+                            <div class="mood-type">不堪負荷、焦慮（教育） / 焦慮、厭惡等等（教育、家人共享）</div>
+                        </div>
+                    </div>
+                    <div class="journal-card-body" style="white-space: pre-wrap;">幹好累一切沒了哈哈但你本來就沒東西從起床到外上都很失敗我真的希望我數學不用重修不過是不可能的因為我連9題都沒寫到我甚至昨天晚上還看了數學回家還被罵中午一次晚上又一次我的一生都很失敗我不期</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">7月8日星期二</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">幹</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">7月6日星期日</span></div>
+                </div>
+                <div class="journal-card">
+                    <div class="journal-mood">
+                        <svg class="mood-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="moodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--accent-color)" />
+                                    <stop offset="100%" stop-color="#ff7eb3" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M50 10 C 60 40, 90 40, 90 50 C 90 60, 60 60, 50 90 C 40 60, 10 60, 10 50 C 10 40, 40 40, 50 10 Z" fill="url(#moodGrad)" opacity="0.8"/>
+                            <path d="M50 20 C 55 45, 80 45, 80 50 C 80 55, 55 55, 50 80 C 45 55, 20 55, 20 50 C 20 45, 45 45, 50 20 Z" fill="rgba(255,255,255,0.4)"/>
+                            <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.9"/>
+                        </svg>
+                        <div class="mood-text">
+                            <div class="mood-type">焦慮、不堪負荷等等 / 身分認同、心靈等等</div>
+                            <div class="mood-time">晚上 11:00</div>
+                        </div>
+                    </div>
+                    <div class="journal-card-body" style="white-space: pre-wrap;">今天幾乎半天我都在意欲痛苦好想死真的好累哎我不求任何人可以理解我我只想死好累我每個月都會有幾次這樣所以我早就習慣來我不會大哭就留幾滴淚而已反正已經很多次了也不差這一次反正也不會改變什麼最</div>
+                    <div class="journal-card-footer"><span class="journal-card-date">7月4日星期五</span></div>
+                </div>
             </div>
-            <div class="social-links">
-                <!-- X (Twitter) -->
-                <a href="https://x.com/Howard54278714" target="_blank" class="social-link" title="X (Twitter)">
-                    <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                </a>
-                <!-- GitHub -->
-                <a href="https://github.com/Howard4995" target="_blank" class="social-link" title="GitHub">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.646 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.376.202 2.394.1 2.646.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
-                </a>
-            </div>
-        </div>
-        <div class="profile-right">
-            <div class="info-row">
-                <div class="info-label">使用語言 & 技術</div>
-                <div class="info-value">C++, HTML5, CSS3, JavaScript, Python, Swift</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">基礎設施 & 工具</div>
-                <div class="info-value">AWS, Azure, Docker, Git, Linux, Huggingface</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">主要屬性</div>
-                <div class="info-value">前端開發者 (Frontend Developer), 學生, AI 研究愛好者</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">喜歡的事物</div>
-                <div class="info-value">奶茶, Cola, AI, 共產, 未來感世界觀, 半夜看顯卡跑分</div>
-            </div>
+
         </div>
     </div>
+
+    <script>
+        // ========== 選單開關 ==========
+        function toggleMenu() {
+            const btn = document.getElementById('hamburgerBtn');
+            const menu = document.getElementById('sideMenu');
+            const overlay = document.getElementById('menuOverlay');
+            const isOpen = menu.classList.contains('open');
+
+            if (isOpen) {
+                closeMenu();
+            } else {
+                btn.classList.add('open');
+                menu.classList.add('open');
+                overlay.classList.add('active');
+            }
+        }
+
+        function closeMenu() {
+            document.getElementById('hamburgerBtn').classList.remove('open');
+            document.getElementById('sideMenu').classList.remove('open');
+            document.getElementById('menuOverlay').classList.remove('active');
+        }
+
+        // ========== 頁面切換 ==========
+        function switchPage(page) {
+            closeMenu();
+
+            // 更新 menu active
+            document.querySelectorAll('.menu-item').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.querySelector(`.menu-item[data-page="${page}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            // 切換頁面
+            document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
+            const target = document.getElementById('page-' + page);
+            void target.offsetWidth;
+            target.classList.add('active');
+
+            // 日誌頁切換主題與排版
+            const wrapper = document.getElementById('pageWrapper');
+            if (page === 'journal') {
+                wrapper.classList.add('top-align');
+                document.body.classList.add('dark-theme');
+            } else {
+                wrapper.classList.remove('top-align');
+                document.body.classList.remove('dark-theme');
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ESC 關閉選單
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMenu();
+        });
+
+        // ========== 評論式日誌卡片轉換 ==========
+        document.addEventListener("DOMContentLoaded", () => {
+            const cards = document.querySelectorAll('.journal-card');
+            cards.forEach(card => {
+                const dateSpan = card.querySelector('.journal-card-date');
+                const dateText = dateSpan ? dateSpan.textContent : '';
+
+                const footer = card.querySelector('.journal-card-footer');
+                if (footer) {
+                    footer.remove();
+                }
+
+                const contentNodes = [];
+                while (card.firstChild) {
+                    contentNodes.push(card.removeChild(card.firstChild));
+                }
+
+                const avatarWrap = document.createElement('div');
+                avatarWrap.className = 'journal-avatar-wrap';
+                avatarWrap.innerHTML = `
+                    <img src="icon.jpg" alt="Howard" class="journal-avatar">
+                    <div class="journal-badge">
+                        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                `;
+
+                const contentWrap = document.createElement('div');
+                contentWrap.className = 'journal-card-content';
+
+                const header = document.createElement('div');
+                header.className = 'journal-card-header';
+                header.innerHTML = `
+                    <span class="journal-card-author">Howard</span>
+                    <span class="journal-card-date">${dateText}</span>
+                `;
+                contentWrap.appendChild(header);
+
+                contentNodes.forEach(node => {
+                    contentWrap.appendChild(node);
+                });
+
+                card.appendChild(avatarWrap);
+                card.appendChild(contentWrap);
+            });
+        });
+    </script>
 
 </body>
 </html>
