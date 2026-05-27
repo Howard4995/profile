@@ -1213,6 +1213,32 @@
                 .replace(/'/g, '&#39;');
         };
 
+        const sanitizeHtml = (html) => {
+            const template = document.createElement('template');
+            template.innerHTML = html || '';
+
+            const allowedTags = new Set(['P', 'BR', 'H2', 'H3', 'H4', 'UL', 'LI', 'CODE', 'STRONG', 'EM', 'U', 'S', 'A']);
+            const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT);
+            const nodesToRemove = [];
+
+            while (walker.nextNode()) {
+                const node = walker.currentNode;
+                if (!allowedTags.has(node.tagName)) {
+                    nodesToRemove.push(node);
+                    continue;
+                }
+
+                [...node.attributes].forEach((attr) => {
+                    const isAnchor = node.tagName === 'A';
+                    const allowedAttr = isAnchor && ['href', 'target', 'rel'].includes(attr.name);
+                    if (!allowedAttr) node.removeAttribute(attr.name);
+                });
+            }
+
+            nodesToRemove.forEach((node) => node.remove());
+            return template.innerHTML;
+        };
+
         const formatDate = (value) => {
             if (!value) return '';
             const date = new Date(value);
@@ -1243,7 +1269,10 @@
             const entryId = card.dataset.entryId;
             const body = card.querySelector('.journal-entry-body');
             const status = card.querySelector('.journal-entry-status');
-            if (!entryId || !body || !status) return;
+            if (!entryId || !body || !status) {
+                console.warn('Missing journal entry elements', { entryId, body, status });
+                return;
+            }
 
             if (!body.hidden) {
                 body.hidden = true;
@@ -1257,10 +1286,11 @@
                 try {
                     const response = await fetch(`/api/journal/${entryId}`);
                     if (!response.ok) {
-                        throw new Error(`Failed to load entry content: ${response.status}`);
+                        throw new Error(`Failed to load entry content: ${response.status} ${response.statusText}`);
                     }
                     const html = await response.text();
-                    body.innerHTML = html && html.trim() ? html : '<p>（此則日誌內容為空白）</p>';
+                    const safeHtml = sanitizeHtml(html);
+                    body.innerHTML = safeHtml && safeHtml.trim() ? safeHtml : '<p>（此則日誌內容為空白）</p>';
                     card.dataset.loaded = 'true';
                 } catch (error) {
                     console.error(error);
@@ -1330,7 +1360,7 @@
             try {
                 const response = await fetch('/api/journal');
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch journal entries: ${response.status}`);
+                    throw new Error(`Failed to fetch journal entries: ${response.status} ${response.statusText}`);
                 }
                 const data = await response.json();
                 const entries = Array.isArray(data.entries) ? data.entries : [];
