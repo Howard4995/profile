@@ -68,15 +68,15 @@ const renderBlock = (block) => {
     }
     case 'heading_1': {
       const content = renderRichText(block.heading_1?.rich_text || []);
-      return `<h2>${content}</h2>`;
+      return `<h1>${content}</h1>`;
     }
     case 'heading_2': {
       const content = renderRichText(block.heading_2?.rich_text || []);
-      return `<h3>${content}</h3>`;
+      return `<h2>${content}</h2>`;
     }
     case 'heading_3': {
       const content = renderRichText(block.heading_3?.rich_text || []);
-      return `<h4>${content}</h4>`;
+      return `<h3>${content}</h3>`;
     }
     case 'bulleted_list_item': {
       const content = renderRichText(block.bulleted_list_item?.rich_text || []);
