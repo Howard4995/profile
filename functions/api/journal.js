@@ -1,3 +1,5 @@
+import { DEFAULT_NOTION_VERSION } from '../_shared/notion.js';
+
 const NOTION_API_BASE = 'https://api.notion.com/v1';
 const DEFAULT_TITLE = '（無標題）';
 
@@ -51,7 +53,7 @@ export const onRequest = async ({ request, env }) => {
 
   const notionToken = env.NOTION_TOKEN;
   const notionDbId = env.NOTION_DB_ID;
-  const notionVersion = env.NOTION_VERSION || '2022-06-28';
+  const notionVersion = env.NOTION_VERSION || DEFAULT_NOTION_VERSION;
 
   if (!notionToken || !notionDbId) {
     return jsonResponse({ error: 'Notion configuration missing' }, 500, corsHeaders);

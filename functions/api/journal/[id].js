@@ -1,3 +1,5 @@
+import { DEFAULT_NOTION_VERSION } from '../../_shared/notion.js';
+
 const NOTION_API_BASE = 'https://api.notion.com/v1';
 
 const buildCorsHeaders = (env) => ({
@@ -60,7 +62,7 @@ const renderRichText = (richText = []) =>
     })
     .join('');
 
-const renderBlock = (block) => {
+const renderBlock = (block, entryId) => {
   switch (block.type) {
     case 'paragraph': {
       const content = renderRichText(block.paragraph?.rich_text || []);
@@ -87,12 +89,12 @@ const renderBlock = (block) => {
       return `<li>${content}</li>`;
     }
     default:
-      console.warn('Unsupported Notion block type', block.type);
+      console.warn('Unsupported Notion block type', { type: block.type, entryId });
       return '';
   }
 };
 
-const blocksToHtml = (blocks) => {
+const blocksToHtml = (blocks, entryId) => {
   const htmlParts = [];
   let listItems = [];
   let listType = null;
@@ -115,7 +117,7 @@ const blocksToHtml = (blocks) => {
       flushList();
       listType = block.type;
     }
-    listItems.push(renderBlock(block));
+    listItems.push(renderBlock(block, entryId));
   };
 
   blocks.forEach((block) => {
@@ -125,7 +127,7 @@ const blocksToHtml = (blocks) => {
     }
 
     flushList();
-    const rendered = renderBlock(block);
+    const rendered = renderBlock(block, entryId);
     if (rendered) htmlParts.push(rendered);
   });
 
@@ -145,7 +147,7 @@ export const onRequest = async ({ request, env, params }) => {
   }
 
   const notionToken = env.NOTION_TOKEN;
-  const notionVersion = env.NOTION_VERSION || '2022-06-28';
+  const notionVersion = env.NOTION_VERSION || DEFAULT_NOTION_VERSION;
   const entryId = params?.id;
 
   if (!notionToken) {
@@ -181,7 +183,7 @@ export const onRequest = async ({ request, env, params }) => {
     }
 
     const data = await response.json();
-    const html = blocksToHtml(data.results || []);
+    const html = blocksToHtml(data.results || [], entryId);
     return textResponse(html, 200, corsHeaders);
   } catch (error) {
     console.error('Failed to fetch journal entry', error);
