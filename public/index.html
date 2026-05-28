@@ -1289,6 +1289,8 @@
             return tag;
         };
 
+        const entryBodyLoadingHtml = '<p class="journal-entry-loading">載入中...</p>';
+
         const loadEntryBody = async (card) => {
             const entryId = card.dataset.entryId;
             const body = card.querySelector('.journal-entry-body');
@@ -1297,7 +1299,7 @@
             }
 
             card.dataset.loading = 'true';
-            body.innerHTML = '<p class="journal-entry-loading">載入中...</p>';
+            body.innerHTML = entryBodyLoadingHtml;
             try {
                 const response = await fetch(`/api/journal/${entryId}`);
                 if (!response.ok) {
@@ -1321,13 +1323,9 @@
             card.dataset.entryId = entry.id;
 
             const titleText = (entry.title || '').trim();
-            const title = document.createElement('div');
-            title.className = 'journal-card-title';
-            title.textContent = titleText;
-
             const body = document.createElement('div');
             body.className = 'journal-entry-body';
-            body.innerHTML = '<p class="journal-entry-loading">載入中...</p>';
+            body.innerHTML = entryBodyLoadingHtml;
 
             const meta = document.createElement('div');
             meta.className = 'journal-meta';
@@ -1348,7 +1346,12 @@
             footerDate.className = 'journal-card-date';
             footerDate.textContent = formatDate(entry.date);
             footer.appendChild(footerDate);
-            if (titleText) card.appendChild(title);
+            if (titleText) {
+                const title = document.createElement('div');
+                title.className = 'journal-card-title';
+                title.textContent = titleText;
+                card.appendChild(title);
+            }
             card.appendChild(body);
             if (meta.children.length) card.appendChild(meta);
             if (tagsWrap.children.length) card.appendChild(tagsWrap);
