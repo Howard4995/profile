@@ -8,14 +8,16 @@ const buildCorsHeaders = (env) => ({
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 });
 
+// 第14行，改這裡
 const jsonResponse = (body, status, corsHeaders) =>
   new Response(JSON.stringify(body), {
     status,
     headers: {
       ...corsHeaders,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json; charset=utf-8',  // 加 charset
     },
   });
+
 
 const textResponse = (body, status, corsHeaders) =>
   new Response(body, {
