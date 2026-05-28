@@ -13,7 +13,7 @@ const jsonResponse = (body, status, corsHeaders) =>
     status,
     headers: {
       ...corsHeaders,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json; charset=utf-8',
     },
   });
 

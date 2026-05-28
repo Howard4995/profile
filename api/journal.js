@@ -41,6 +41,8 @@ export default async function handler(req, res) {
     return res.status(204).end();
   }
 
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
