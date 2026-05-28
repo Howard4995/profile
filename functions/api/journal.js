@@ -1,4 +1,5 @@
 const NOTION_API_BASE = 'https://api.notion.com/v1';
+const DEFAULT_TITLE = '（無標題）';
 
 const buildCorsHeaders = (env) => ({
   'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || '*',
@@ -58,10 +59,10 @@ export const onRequest = async ({ request, env }) => {
 
   try {
     const headers = {
+      Authorization: 'Bearer ' + notionToken,
       'Notion-Version': notionVersion,
       'Content-Type': 'application/json',
     };
-    headers.Authorization = 'Bearer ' + notionToken;
     const response = await fetch(`${NOTION_API_BASE}/databases/${notionDbId}/query`, {
       method: 'POST',
       headers,
@@ -91,7 +92,7 @@ export const onRequest = async ({ request, env }) => {
     const data = await response.json();
     const entries = (data.results || []).map((page) => ({
       id: page.id,
-      title: getTitle(page) || '（無標題）',
+      title: getTitle(page) || DEFAULT_TITLE,
       date: getDate(page),
       mood: getSelectName(page, 'Mood'),
       energy: getSelectName(page, 'Energy'),

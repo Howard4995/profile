@@ -64,7 +64,7 @@ const renderBlock = (block) => {
   switch (block.type) {
     case 'paragraph': {
       const content = renderRichText(block.paragraph?.rich_text || []);
-      return `<p>${content || ''}</p>`;
+      return `<p>${content}</p>`;
     }
     case 'heading_1': {
       const content = renderRichText(block.heading_1?.rich_text || []);
@@ -138,9 +138,9 @@ export const onRequest = async ({ request, env, params }) => {
 
   try {
     const headers = {
+      Authorization: 'Bearer ' + notionToken,
       'Notion-Version': notionVersion,
     };
-    headers.Authorization = 'Bearer ' + notionToken;
 
     const response = await fetch(`${NOTION_API_BASE}/blocks/${entryId}/children`, {
       method: 'GET',
