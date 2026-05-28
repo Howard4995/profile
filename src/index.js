@@ -213,9 +213,9 @@ const handleJournalList = async (request, env) => {
       id: page.id,
       title: getTitle(page) || DEFAULT_TITLE,
       date: getDate(page),
-      mood: getSelectName(page, 'Mood'),
-      energy: getSelectName(page, 'Energy'),
-      tags: getMultiSelectNames(page, 'Tags'),
+      mood: getSelectName(page, '心情'),
+      energy: getSelectName(page, '能量值'),
+      tags: getMultiSelectNames(page, '標籤'),
     }));
 
     return jsonResponse({ entries }, 200, corsHeaders);
