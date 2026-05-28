@@ -102,6 +102,7 @@ const blocksToHtml = (blocks) => {
 
 export default async function handler(req, res) {
   setCorsHeaders(res);
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
