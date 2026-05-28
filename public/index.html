@@ -1188,10 +1188,16 @@
 
             const header = document.createElement('div');
             header.className = 'journal-card-header';
-            header.innerHTML = `
-                <span class="journal-card-author">Howard</span>
-                <span class="journal-card-date">${dateText}</span>
-            `;
+            const author = document.createElement('span');
+            author.className = 'journal-card-author';
+            author.textContent = 'Howard';
+
+            const date = document.createElement('span');
+            date.className = 'journal-card-date';
+            date.textContent = dateText;
+
+            header.appendChild(author);
+            header.appendChild(date);
             contentWrap.appendChild(header);
 
             contentNodes.forEach(node => {
