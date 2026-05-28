@@ -82,7 +82,12 @@ const renderBlock = (block) => {
       const content = renderRichText(block.bulleted_list_item?.rich_text || []);
       return `<li>${content}</li>`;
     }
+    case 'ordered_list_item': {
+      const content = renderRichText(block.ordered_list_item?.rich_text || []);
+      return `<li>${content}</li>`;
+    }
     default:
+      console.warn('Unsupported Notion block type', block.type);
       return '';
   }
 };
@@ -90,17 +95,32 @@ const renderBlock = (block) => {
 const blocksToHtml = (blocks) => {
   const htmlParts = [];
   let listItems = [];
+  let listType = null;
 
   const flushList = () => {
-    if (listItems.length) {
-      htmlParts.push(`<ul>${listItems.join('')}</ul>`);
-      listItems = [];
+    if (!listItems.length) return;
+    const tag = listType === 'ordered_list_item' ? 'ol' : 'ul';
+    htmlParts.push(`<${tag}>${listItems.join('')}</${tag}>`);
+    listItems = [];
+    listType = null;
+  };
+
+  const isListItem = (block) =>
+    block.type === 'bulleted_list_item' || block.type === 'ordered_list_item';
+
+  const pushListItem = (block) => {
+    if (!listType) {
+      listType = block.type;
+    } else if (listType !== block.type) {
+      flushList();
+      listType = block.type;
     }
+    listItems.push(renderBlock(block));
   };
 
   blocks.forEach((block) => {
-    if (block.type === 'bulleted_list_item') {
-      listItems.push(renderBlock(block));
+    if (isListItem(block)) {
+      pushListItem(block);
       return;
     }
 
