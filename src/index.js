@@ -112,6 +112,12 @@ const renderBlock = (block, entryId) => {
       const content = renderRichText(block.ordered_list_item?.rich_text || []);
       return `<li>${content}</li>`;
     }
+    case 'image': {
+      const url = block.image?.file?.url
+        || block.image?.external?.url || '';
+      if (!url) return '';
+      return `<img src="${url}" class="notion-image" alt="圖片" />`;
+    }
     default:
       console.warn('Unsupported Notion block type', { type: block.type, entryId });
       return '';
