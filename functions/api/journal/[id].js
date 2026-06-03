@@ -99,7 +99,7 @@ const renderBlock = (block, entryId) => {
       if (!url) return '';
       const isTweet = /^https?:\/\/(www\.)?(twitter|x)\.com\//.test(url);
       if (isTweet) {
-        return `<a class="tweet-embed" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`;
+        return `<blockquote class="twitter-tweet" data-theme="dark"><a href="${escapeHtml(url)}"></a></blockquote>`;
       }
       return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`;
     }
