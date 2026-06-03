@@ -3,949 +3,574 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Howard - 個人頁面</title>
+    <title>Howard</title>
     <style>
         :root {
-            --bg-color: #fdfbf7;
-            --surface-color: #ffffff;
-            --text-primary: #1d1d1f;
-            --text-secondary: #86868b;
-            --border-color: #e5e5ea;
-            --accent-color: #f5a623;
-            --hover-bg: #f5f5f7;
-            --apple-ease: cubic-bezier(0.16, 1, 0.3, 1);
-            
-            /* Echtes Liquid Glass - Light Mode */
-            --glass-bg: rgba(255, 255, 255, 0.15);
-            --glass-border: rgba(255, 255, 255, 0.4);
-            --glass-shadow: rgba(0, 0, 0, 0.08);
-            --glass-highlight: rgba(255, 255, 255, 0.8);
-            --glass-caustic: rgba(255, 255, 255, 0.4);
-            --reflection-start: rgba(255, 255, 255, 0.6);
-            --reflection-end: rgba(255, 255, 255, 0.0);
-            --glare-color: rgba(255, 255, 255, 0.5);
-            --pill-bg: rgba(255, 255, 255, 0.75);
-            --pill-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04), inset 0 1px 1px rgba(255,255,255,0.8);
-            --icon-color: rgba(29, 29, 31, 0.45);
-            --icon-active: rgba(29, 29, 31, 0.9);
-        }
-
-        /* 日誌專屬黑暗/抑鬱主題 */
-        body.dark-theme {
-            --bg-color: #1e1e20; /* 溫和高級的深灰（稍微調淺） */
-            --surface-color: #2c2c2e; /* 黑暗卡片底色 */
-            --text-primary: #e5e2d9; /* 顯眼但非純白的骨白/象牙色 */
-            --text-secondary: #a5a29a; /* 提升對比度後的溫和沙灰色，確保日記內容清晰易讀 */
-            --border-color: #38383a;
-            --accent-color: #909297; /* 略微調亮後的冷淡灰色，用於日期等輔助資訊 */
-            --hover-bg: rgba(255, 255, 255, 0.06);
-            
-            /* Echtes Liquid Glass - Dark Mode */
-            --glass-bg: rgba(30, 30, 35, 0.45);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --glass-shadow: rgba(0, 0, 0, 0.4);
-            --glass-highlight: rgba(255, 255, 255, 0.25);
-            --glass-caustic: rgba(255, 255, 255, 0.05);
-            --reflection-start: rgba(255, 255, 255, 0.15);
-            --reflection-end: rgba(255, 255, 255, 0.0);
-            --glare-color: rgba(255, 255, 255, 0.15);
-            --pill-bg: rgba(60, 60, 65, 0.8);
-            --pill-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.2);
-            --icon-color: rgba(229, 226, 217, 0.5);
-            --icon-active: #ffffff;
-        }
-
-        body.dark-theme .hamburger-btn {
-            background: rgba(28, 28, 30, 0.8);
-        }
-        body.dark-theme .hamburger-btn .bar {
-            background: var(--text-primary);
-        }
-        body.dark-theme .side-menu {
-            background: transparent;
-            border: none;
-        }
-        body.dark-theme .side-menu::before {
-            background: linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.10) 100%);
+            --bg: #ffffff;
+            --bg-soft: #f5f5f7;
+            --card: #ffffff;
+            --text: #1a1a1c;
+            --text-soft: #86868b;
+            --line: #ededf0;
+            --line-strong: #e1e1e5;
+            --ink: #1a1a1c;
+            --radius: 18px;
+            --radius-sm: 12px;
+            --maxw: 600px;
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --shadow-card: 0 1px 2px rgba(0,0,0,0.04), 0 10px 30px rgba(0,0,0,0.05);
+            --shadow-soft: 0 2px 10px rgba(0,0,0,0.06);
+            --pink-bg: #ffe3ec;
+            --pink-fg: #d6336c;
+            --violet-bg: #ebe9ff;
+            --violet-fg: #5b54c9;
         }
 
         * { box-sizing: border-box; }
 
+        html { -webkit-text-size-adjust: 100%; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            transition: background-color 0.5s var(--apple-ease);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
 
-        /* ========== 漢堡選單按鈕 ========== */
-        .hamburger-btn {
-            position: fixed;
-            top: 18px;
-            right: 20px;
-            z-index: 300;
-            width: 44px;
-            height: 44px;
-            border: none;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+        a { color: inherit; text-decoration: none; }
+
+        /* ========== 頂部導覽列 ========== */
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 58px;
+            padding: 0 18px;
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid var(--line);
+        }
+        .site-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand-avatar {
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            object-fit: cover;
+            background: var(--bg-soft);
+        }
+        .brand-name {
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+        }
+
+        .hamburger-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 5px;
-            transition: all 0.4s var(--apple-ease);
+            transition: background 0.2s var(--ease);
         }
-        .hamburger-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-        }
-        .hamburger-btn:active {
-            transform: scale(0.95);
-        }
+        .hamburger-btn:hover { background: var(--bg-soft); }
         .hamburger-btn .bar {
-            width: 18px;
+            width: 20px;
             height: 2px;
-            background: var(--text-primary);
+            background: var(--ink);
             border-radius: 2px;
-            transition: all 0.4s var(--apple-ease);
+            transition: transform 0.35s var(--ease), opacity 0.2s var(--ease);
         }
-        /* 打開時的 X 動畫 */
-        .hamburger-btn.open {
-            background: var(--surface-color);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .hamburger-btn.open .bar:nth-child(1) {
-            transform: translateY(7px) rotate(45deg);
-        }
-        .hamburger-btn.open .bar:nth-child(2) {
-            opacity: 0;
-            transform: scaleX(0);
-        }
-        .hamburger-btn.open .bar:nth-child(3) {
-            transform: translateY(-7px) rotate(-45deg);
-        }
+        .hamburger-btn.open .bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .hamburger-btn.open .bar:nth-child(2) { opacity: 0; }
+        .hamburger-btn.open .bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-        /* ========== 側邊選單 ========== */
+        /* ========== 抽屜選單 ========== */
         .menu-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            z-index: 190;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(1px);
+            z-index: 290;
             opacity: 0;
             pointer-events: none;
+            transition: opacity 0.4s var(--ease);
         }
-        .menu-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .menu-overlay.active { opacity: 1; pointer-events: auto; }
 
         .side-menu {
             position: fixed;
             top: 0;
-            right: -180px;
-            width: 180px;
+            right: 0;
             height: 100%;
-            z-index: 200;
-            transition: right 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            width: 78%;
+            max-width: 320px;
+            background: var(--bg);
+            z-index: 300;
+            padding: 84px 26px 32px;
             display: flex;
             flex-direction: column;
-            padding: 80px 0 30px;
-            border: none;
-            background: transparent;
+            gap: 4px;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.08);
+            transform: translateX(100%);
+            transition: transform 0.45s var(--ease);
         }
-        .side-menu::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 193px; /* Precise height covering up to the menu-divider */
-            background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.05) 100%);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: -1;
-            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 100%);
-            mask-image: linear-gradient(to right, transparent 0%, black 100%);
-            pointer-events: none;
-        }
-        .side-menu.open {
-            right: 0;
-        }
-
+        .side-menu.open { transform: translateX(0); }
         .menu-item {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 10px;
-            padding: 16px 28px;
-            font-size: 1.05rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            cursor: pointer;
-            border: none;
+            display: block;
+            width: 100%;
+            text-align: left;
             background: transparent;
+            border: none;
             font-family: inherit;
-            text-align: right;
-            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-                        opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-                        color 0.3s ease;
-            position: relative;
-            transform: translateY(-16px);
-            opacity: 0;
+            font-size: 1.18rem;
+            font-weight: 600;
+            color: var(--text);
+            padding: 13px 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s var(--ease), color 0.2s var(--ease);
         }
-        .menu-item::before {
-            content: '';
+        .menu-item:hover { background: var(--bg-soft); }
+        .menu-item.active { color: var(--ink); }
+        .menu-item.active::before {
+            content: "";
+            display: inline-block;
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: var(--text-secondary);
-            flex-shrink: 0;
-            transition: background 0.3s ease;
+            background: var(--ink);
+            margin-right: 10px;
+            vertical-align: middle;
         }
-        .menu-item.active::before {
-            background: var(--accent-color);
-        }
-        .side-menu.open .menu-item {
-            transform: translateY(0);
-            opacity: 1;
-        }
-        .side-menu.open .menu-item:nth-child(1) { transition-delay: 0.08s; }
-        .side-menu.open .menu-item:nth-child(2) { transition-delay: 0.18s; }
-
-        .menu-item:hover {
-            color: var(--text-primary);
-        }
-        .menu-item.active {
-            color: var(--accent-color);
-        }
-
+        .menu-link { color: var(--text-soft); font-weight: 500; font-size: 1.05rem; }
         .menu-divider {
             height: 1px;
-            background: var(--border-color);
-            margin: 12px 28px;
+            background: var(--line);
+            margin: 14px 8px;
         }
 
-        .menu-footer {
-            margin-top: auto;
-            padding: 0 28px;
-            font-size: 0.78rem;
-            color: #b0b8c1;
-            line-height: 1.5;
-            text-align: right;
-        }
-
-        /* ========== 頁面容器 ========== */
+        /* ========== 版面容器 ========== */
         .page-wrapper {
             display: flex;
             justify-content: center;
-            padding: 30px 20px 60px;
-            min-height: 100vh;
-            align-items: center;
-        }
-        /* 日誌頁面不需要垂直居中 */
-        .page-wrapper.top-align {
-            align-items: flex-start;
-            padding-top: 40px;
+            padding: 0 20px;
         }
         .page-content {
-            max-width: 900px;
             width: 100%;
+            max-width: var(--maxw);
+            padding: 8px 0 96px;
         }
-        .page-view {
-            display: none;
-            animation: pageFadeIn 0.6s var(--apple-ease) forwards;
-        }
-        .page-view.active {
-            display: block;
-        }
-        @keyframes pageFadeIn {
-            from { opacity: 0; transform: translateY(16px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+        .page-view { display: none; animation: fadeUp 0.6s var(--ease); }
+        .page-view.active { display: block; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ========== 個人簡介（原有樣式） ========== */
-        .profile-section {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-            width: 100%;
-            background: var(--surface-color);
-            padding: 40px;
-            border-radius: 24px;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
-        }
-        .profile-left {
-            flex: 1 1 300px;
+        /* ========== Hero ========== */
+        .hero {
             text-align: center;
+            padding: 40px 0 28px;
         }
-        .profile-avatar-wrap {
+        .hero-cards {
             position: relative;
+            width: 196px;
+            height: 234px;
+            margin: 0 auto 36px;
+        }
+        .hero-card {
+            position: absolute;
+            inset: 0;
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+        }
+        .hero-card-back {
+            background: linear-gradient(150deg, #ffd9e8 0%, #fff1c9 55%, #d9ecff 100%);
+            transform: rotate(7deg) translate(14px, 8px);
+        }
+        .hero-card-mid {
+            background: linear-gradient(150deg, #e7f0ff, #f3e8ff);
+            transform: rotate(-3deg) translate(-10px, 4px);
+        }
+        .hero-card-main {
+            background: #fff;
+            transform: rotate(-2deg);
+            border: 5px solid #fff;
+        }
+        .hero-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .hero-title {
+            font-size: 2.7rem;
+            line-height: 1.08;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin: 0 0 14px;
+        }
+        .hero-subtitle {
+            font-size: 1.05rem;
+            color: var(--text-soft);
+            margin: 0 auto 28px;
+            max-width: 420px;
+        }
+        .hero-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 24px;
+            border-radius: 14px;
+            font-family: inherit;
+            font-size: 0.97rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: transform 0.25s var(--ease), background 0.25s var(--ease), box-shadow 0.25s var(--ease);
+        }
+        .btn span { transition: transform 0.3s var(--ease); }
+        .btn:hover span { transform: translateX(4px); }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: var(--ink); color: #fff; box-shadow: var(--shadow-soft); }
+        .btn-primary:hover { background: #000; }
+        .btn-secondary { background: #fff; color: var(--ink); border-color: var(--line-strong); }
+        .btn-secondary:hover { background: var(--bg-soft); }
+
+        .hero-social {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 26px;
+        }
+        .social-link {
+            width: 42px;
+            height: 42px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 15px;
-        }
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
             border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid var(--surface-color);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            display: block;
+            color: var(--text-soft);
+            background: var(--bg-soft);
+            transition: transform 0.25s var(--ease), color 0.25s var(--ease), background 0.25s var(--ease);
         }
-        .profile-avatar-cat {
-            position: absolute;
-            width: 65px;
-            height: 50px;
-            top: -24px;
-            right: -15px;
-            z-index: 2;
-            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.28));
-            pointer-events: none;
-            transform: rotate(8deg);
-            transform-origin: 50% 80%;
+        .social-link:hover { color: #fff; background: var(--ink); transform: translateY(-2px); }
+        .social-link svg { width: 19px; height: 19px; fill: currentColor; }
+
+        /* ========== 內容區塊 ========== */
+        .section { padding: 30px 0; border-top: 1px solid var(--line); }
+        .section-heading {
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-soft);
+            margin: 0 0 18px;
         }
-        .profile-avatar-wrap:hover .profile-avatar-cat {
-            animation: avatar-cat-peek 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes avatar-cat-peek {
-            0%, 100% { transform: translateY(0) rotate(8deg); }
-            45% { transform: translateY(-6px) rotate(3deg); }
-        }
-        .profile-name {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            margin: 0;
-            letter-spacing: -0.5px;
-        }
-        .profile-handle {
-            color: var(--text-secondary);
-            font-size: 1rem;
-            margin-top: 4px;
-            margin-bottom: 20px;
-        }
-        .profile-intro {
-            font-size: 1rem;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-        .social-links {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-        }
-        .social-link {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-            color: var(--text-primary);
-            text-decoration: none;
-            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid var(--border-color);
-        }
-        .social-link:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-        .social-link svg {
-            width: 24px;
-            height: 24px;
-            fill: currentColor;
-        }
-        .profile-right {
-            flex: 1 1 400px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+        .about-text {
+            font-size: 1.02rem;
+            color: #38383c;
+            line-height: 1.85;
         }
         .info-row {
             display: flex;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.95rem;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 18px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--line);
         }
         .info-row:last-child { border-bottom: none; }
         .info-label {
-            width: 140px;
-            font-weight: 800;
-            color: var(--text-primary);
+            color: var(--text-soft);
+            font-size: 0.92rem;
+            flex-shrink: 0;
         }
         .info-value {
-            flex: 1;
-            color: var(--text-secondary);
-            line-height: 1.6;
+            text-align: right;
+            font-size: 0.95rem;
+            font-weight: 500;
         }
 
-        /* ========== 日誌頁面 ========== */
+        /* ========== 日誌頁 ========== */
+        #page-journal { padding-top: 12px; }
         .journal-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 28px;
+            padding: 18px 0 10px;
         }
         .journal-back {
             width: 38px;
             height: 38px;
+            border: 1px solid var(--line-strong);
+            background: #fff;
             border-radius: 50%;
-            border: 1px solid var(--border-color);
-            background: var(--surface-color);
-            color: var(--accent-color);
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s;
-            flex-shrink: 0;
+            color: var(--text);
+            transition: background 0.2s var(--ease);
         }
-        .journal-back:hover {
-            background: var(--hover-bg);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        }
-        .journal-back svg {
-            width: 18px;
-            height: 18px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-        .journal-title {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            letter-spacing: -0.5px;
-        }
+        .journal-back:hover { background: var(--bg-soft); }
+        .journal-back svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+        .journal-title { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; }
 
-        /* 月份標題 */
         .month-label {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            margin: 28px 0 14px;
-            padding-left: 4px;
-        }
-        .month-label:first-child {
-            margin-top: 0;
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-soft);
+            margin: 34px 0 14px;
         }
 
-        /* 日誌卡片 */
+        .journal-list { display: flex; flex-direction: column; }
+
         .journal-card {
             display: flex;
-            gap: 16px;
-            align-items: flex-start;
-            background: #f0f2f6;
-            border-radius: 18px;
-            padding: 22px 24px;
-            margin-bottom: 12px;
-            box-shadow: 
-                inset 4px 4px 8px rgba(0, 0, 0, 0.06), 
-                inset -4px -4px 8px rgba(255, 255, 255, 0.8);
-            border: 1px solid rgba(0, 0, 0, 0.02);
-            transition: all 0.3s var(--apple-ease);
+            gap: 13px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 18px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-card);
+            transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
         }
-        .journal-card[role="button"] {
-            cursor: pointer;
-        }
-        .journal-card:hover {
-            box-shadow: 
-                inset 2px 2px 5px rgba(0, 0, 0, 0.08), 
-                inset -2px -2px 5px rgba(255, 255, 255, 0.9);
-            transform: none;
-        }
+        .journal-card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.07); }
 
-        body.dark-theme .journal-card {
-            background: #121214;
-            box-shadow: 
-                inset 5px 5px 12px rgba(0, 0, 0, 0.85), 
-                inset -5px -5px 12px rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(0, 0, 0, 0.4);
-        }
-        body.dark-theme .journal-card:hover {
-            box-shadow: 
-                inset 3px 3px 8px rgba(0, 0, 0, 0.9), 
-                inset -3px -3px 8px rgba(255, 255, 255, 0.03);
-            transform: none;
-        }
-
-        /* 評論式頭像排版 */
-        .journal-avatar-wrap {
-            position: relative;
-            width: 44px;
-            height: 44px;
-            flex-shrink: 0;
-            display: block;
-        }
+        .journal-avatar-wrap { position: relative; flex-shrink: 0; }
         .journal-avatar {
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             object-fit: cover;
-            border: 1.5px solid var(--border-color);
-            display: block;
+            background: var(--bg-soft);
         }
         .journal-badge {
             position: absolute;
-            bottom: -2px;
-            right: -2px;
-            width: 15px;
-            height: 15px;
-            background: #1d9bf0; /* 藍色驗證打勾 */
+            right: -3px;
+            bottom: -3px;
+            width: 17px;
+            height: 17px;
             border-radius: 50%;
+            background: #4f8cff;
+            border: 2px solid #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1.5px solid var(--surface-color);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
         }
-        .journal-badge svg {
-            width: 9px;
-            height: 9px;
-            fill: none;
-            stroke: #fff;
-            stroke-width: 3.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-        .journal-card-content {
-            flex: 1;
-            min-width: 0; /* 防止溢出 */
-        }
+        .journal-badge svg { width: 9px; height: 9px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+
+        .journal-card-content { flex: 1; min-width: 0; }
         .journal-card-header {
             display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+        .journal-card-author { font-weight: 700; font-size: 0.98rem; }
+        .journal-card-date { color: var(--text-soft); font-size: 0.85rem; }
+
+        .journal-card-body {
+            font-size: 1rem;
+            color: #2b2b2e;
+            line-height: 1.75;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+        .journal-card-body img,
+        .notion-image {
+            max-width: 100%;
+            border-radius: 12px;
+            margin-top: 10px;
+            cursor: zoom-in;
+        }
+
+        .journal-mood {
+            display: inline-flex;
             align-items: center;
             gap: 10px;
             margin-bottom: 12px;
         }
-        .journal-card-author {
-            font-weight: 700;
-            font-size: 1rem;
-            color: var(--text-primary);
-        }
-        .journal-card-date {
-            font-size: 0.82rem;
-            color: var(--accent-color);
-            font-weight: 500;
-        }
-        .journal-card-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 6px;
-            line-height: 1.5;
-        }
-        .journal-card-body {
-            font-size: 0.92rem;
-            color: var(--text-secondary);
-            line-height: 1.65;
-            margin-bottom: 12px;
-        }
-        .journal-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px 12px;
-            margin-bottom: 12px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-        .journal-meta-item {
-            background: var(--hover-bg);
-            padding: 4px 10px;
-            border-radius: 999px;
-        }
-        .journal-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        .journal-tag {
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--accent-color);
-            padding: 2px 10px;
-            border-radius: 999px;
-            font-size: 0.78rem;
-            border: 1px solid var(--border-color);
-        }
-        .journal-entry-body {
-            font-size: 0.92rem;
-            color: var(--text-secondary);
-            line-height: 1.7;
-            margin-top: 10px;
-        }
-        .journal-entry-loading {
-            margin: 0;
-            color: var(--text-secondary);
-        }
-        .journal-entry-body p {
-            margin: 0 0 12px;
-        }
-        .journal-entry-body h2,
-        .journal-entry-body h3,
-        .journal-entry-body h4 {
-            color: var(--text-primary);
-            margin: 16px 0 8px;
-        }
-        .journal-entry-body ul {
-            margin: 0 0 12px;
-            padding-left: 22px;
-        }
-        .journal-entry-status {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-        .journal-card-footer {
-            display: flex;
-            align-items: center;
-        }
-        .journal-card-date {
-            font-size: 0.82rem;
-            color: var(--accent-color);
-            font-weight: 600;
-        }
-
-        /* 空狀態 */
-        /* 心情圖標與標題區域 */
-        .journal-mood {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-        .mood-icon {
-            width: 48px;
-            height: 48px;
-            flex-shrink: 0;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-        }
-        .mood-text {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+        .mood-icon { width: 30px; height: 30px; flex-shrink: 0; }
+        .mood-text { display: flex; flex-direction: column; gap: 1px; }
         .mood-type {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        .mood-time {
             font-size: 0.8rem;
-            color: var(--text-secondary);
+            font-weight: 600;
+            color: var(--pink-fg);
+            background: var(--pink-bg);
+            padding: 3px 10px;
+            border-radius: 999px;
+            align-self: flex-start;
+            line-height: 1.4;
         }
+        .mood-time { font-size: 0.78rem; color: var(--text-soft); margin-left: 2px; }
 
-        .journal-empty {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
-        }
-        .journal-empty-icon { font-size: 3rem; margin-bottom: 12px; }
-        .journal-empty-text { font-size: 1rem; }
+        .journal-card-footer { margin-top: 10px; }
 
-        /* ========== Notion 圖片 ========== */
-        .notion-image {
-            width: 100%;
-            max-width: 100%;
-            border-radius: 12px;
-            object-fit: cover;
-            aspect-ratio: 16/9;
-            cursor: pointer;
-            margin-top: 10px;
+        .journal-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+        .journal-meta-item { font-size: 0.78rem; color: var(--text-soft); }
+        .journal-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .journal-tag {
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--violet-fg);
+            background: var(--violet-bg);
+            padding: 3px 10px;
+            border-radius: 999px;
         }
+        .journal-entry-loading { color: var(--text-soft); font-style: italic; }
+
+        .journal-empty { text-align: center; padding: 40px 0; color: var(--text-soft); }
+        .journal-empty-icon { font-size: 2rem; margin-bottom: 8px; }
+        .journal-empty-text { font-size: 0.95rem; }
 
         /* ========== 圖片燈箱 ========== */
         .image-lightbox {
             position: fixed;
             inset: 0;
-            z-index: 9999;
+            z-index: 500;
+            background: rgba(0,0,0,0.85);
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(0, 0, 0, 0.85);
-            cursor: pointer;
+            padding: 24px;
             opacity: 0;
-            transition: opacity 0.25s ease;
+            transition: opacity 0.3s var(--ease);
+            cursor: zoom-out;
         }
-        .image-lightbox.active {
-            opacity: 1;
+        .image-lightbox.active { opacity: 1; }
+        .image-lightbox img { max-width: 100%; max-height: 100%; border-radius: 12px; }
+
+        /* ========== RWD ========== */
+        @media (min-width: 700px) {
+            .hero-title { font-size: 3.1rem; }
         }
-        .image-lightbox img {
-            max-width: 92vw;
-            max-height: 90vh;
-            border-radius: 14px;
-            object-fit: contain;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
-            pointer-events: none;
-        }
-
-        /* ========== 手機板液態導覽列 ========== */
-        .liquid-nav {
-            display: none;
-        }
-
-        /* ========== 行動裝置模式 ========== */
-        @media (max-width: 768px) {
-            .profile-section { padding: 30px 20px; }
-            .info-row { flex-direction: column; }
-            .info-label { margin-bottom: 6px; }
-            .side-menu { display: none !important; }
-            .hamburger-btn { display: none !important; }
-            .menu-overlay { display: none !important; }
-            .journal-header { flex-wrap: wrap; }
-
-            /* 🟢 Apple Liquid Glass Nav Styles for Mobile */
-            .liquid-nav {
-                position: fixed;
-                bottom: 24px;
-                left: 50%;
-                transform: translateX(-50%);
-                display: flex;
-                align-items: center;
-                padding: 8px;
-                border-radius: 99px;
-                
-                /* Extrem tiefer Blur für das Apple-Gefühl */
-                background: var(--glass-bg);
-                backdrop-filter: blur(50px) saturate(200%);
-                -webkit-backdrop-filter: blur(50px) saturate(200%);
-                
-                /* Multi-Layer Schatten für echtes 3D-Volumen */
-                box-shadow: 
-                    0 30px 60px -15px var(--glass-shadow),
-                    0 10px 20px -10px var(--glass-shadow),
-                    inset 0 2px 3px -1px var(--glass-highlight),
-                    inset 0 -2px 4px -1px var(--glass-caustic),
-                    inset 0 0 0 1px var(--glass-border);
-                    
-                transition: all 0.5s ease;
-                z-index: 1000;
-            }
-
-            /* Die klassische gebogene Aqua-Spiegelung (Macht es 'nass') */
-            .liquid-nav::before {
-                content: '';
-                position: absolute;
-                top: 1px; left: 1px; right: 1px; height: 46%;
-                /* Tropfenförmige Wölbung an den Rändern */
-                border-radius: 99px 99px 24px 24px / 99px 99px 12px 12px;
-                background: linear-gradient(180deg, var(--reflection-start) 0%, var(--reflection-end) 100%);
-                pointer-events: none;
-                z-index: 6; 
-                transition: background 0.5s ease;
-            }
-
-            /* Interaktiver 3D Lichtkegel der der Maus folgt */
-            .liquid-glare-container {
-                position: absolute;
-                inset: 0;
-                border-radius: 99px;
-                overflow: hidden;
-                pointer-events: none;
-                z-index: 5;
-            }
-            
-            .liquid-glare {
-                position: absolute;
-                inset: 0;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-                background: radial-gradient(circle 90px at var(--x, 50%) var(--y, 50%), var(--glare-color) 0%, transparent 100%);
-                mix-blend-mode: overlay;
-            }
-            
-            .liquid-nav:hover .liquid-glare {
-                opacity: 1;
-            }
-
-            .nav-items {
-                position: relative;
-                display: flex;
-                gap: 4px;
-                z-index: 3;
-            }
-
-            .active-pill {
-                position: absolute;
-                top: 0; left: 0; 
-                height: 44px;
-                background: var(--pill-bg);
-                border-radius: 99px;
-                box-shadow: var(--pill-shadow);
-                
-                /* Apple Bouncy Spring Animationskurve */
-                transition: transform 0.5s cubic-bezier(0.34, 1.2, 0.64, 1), 
-                            width 0.5s cubic-bezier(0.34, 1.2, 0.64, 1),
-                            background 0.5s ease, box-shadow 0.5s ease;
-                z-index: 1; 
-            }
-
-            .nav-btn {
-                position: relative;
-                background: transparent;
-                border: none;
-                width: 48px; /* Fixed width for icons */
-                height: 44px; /* Exakte Höhe für den Slider */
-                border-radius: 99px;
-                font-family: inherit;
-                color: var(--icon-color);
-                cursor: pointer;
-                -webkit-tap-highlight-color: transparent;
-                transition: color 0.3s ease;
-                outline: none;
-                z-index: 2; /* Über der Pille */
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .btn-content {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                pointer-events: none;
-                transition: transform 0.2s cubic-bezier(0.32, 0.72, 0, 1);
-            }
-
-            .nav-btn:active .btn-content {
-                transform: scale(0.92);
-            }
-
-            .nav-btn.active {
-                color: var(--icon-active);
-            }
+        @media (max-width: 380px) {
+            .hero-title { font-size: 2.35rem; }
+            .info-value { font-size: 0.88rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- 🟢 漢堡按鈕 -->
-    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()">
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
-    </button>
+    <!-- 頂部導覽列 -->
+    <header class="site-header">
+        <a class="site-brand" href="#" onclick="switchPage('profile'); return false;">
+            <img src="icon.jpg" alt="Howard" class="brand-avatar">
+            <span class="brand-name">Howard</span>
+        </a>
+        <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()" aria-label="選單">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
+    </header>
 
-    <!-- 🟢 遮罩 -->
+    <!-- 遮罩 -->
     <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
 
-    <!-- 🟢 側邊選單 -->
+    <!-- 抽屜選單 -->
     <nav class="side-menu" id="sideMenu">
-        <button class="menu-item active" data-page="profile" onclick="switchPage('profile')">
-            首頁
-        </button>
-        <button class="menu-item" data-page="journal" onclick="switchPage('journal')">
-            日誌
-        </button>
+        <button class="menu-item active" data-page="profile" onclick="switchPage('profile')">首頁</button>
+        <button class="menu-item" data-page="journal" onclick="switchPage('journal')">日誌</button>
         <div class="menu-divider"></div>
+        <a class="menu-item menu-link" href="https://github.com/Howard4995" target="_blank" rel="noopener">GitHub</a>
+        <a class="menu-item menu-link" href="https://x.com/Howard54278714" target="_blank" rel="noopener">X (Twitter)</a>
     </nav>
 
-    <!-- 🟢 手機板底部液態玻璃選單 -->
-    <nav class="liquid-nav" id="liquidNav">
-        <div class="liquid-glare-container">
-            <div class="liquid-glare" id="liquidGlare"></div>
-        </div>
-        <div class="nav-items">
-            <div class="active-pill" id="activePill"></div>
-            <button class="nav-btn active" data-page="profile" onclick="switchPage('profile')">
-                <div class="btn-content">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                    </svg>
-                </div>
-            </button>
-            <button class="nav-btn" data-page="journal" onclick="switchPage('journal')">
-                <div class="btn-content">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2">
-                        <line x1="8" y1="6" x2="21" y2="6"></line>
-                        <line x1="8" y1="12" x2="21" y2="12"></line>
-                        <line x1="8" y1="18" x2="21" y2="18"></line>
-                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                    </svg>
-                </div>
-            </button>
-        </div>
-    </nav>
-
-    <!-- 🟢 頁面內容 -->
+    <!-- 頁面內容 -->
     <div class="page-wrapper" id="pageWrapper">
         <div class="page-content">
 
             <!-- ========== 自我介紹頁 ========== -->
             <div class="page-view active" id="page-profile">
-                <div class="profile-section">
-                    <div class="profile-left">
-                        <div class="profile-avatar-wrap" aria-label="Howard profile avatar">
-                            <img src="icon.jpg" alt="Howard" class="profile-avatar">
-                            <svg class="profile-avatar-cat" viewBox="0 0 120 92" aria-hidden="true">
-                                <path d="M18 56c-5-17 5-33 26-38 4-8 13-15 18-14 3 1 0 10 0 16 9 1 18 4 24 10 7 7 12 17 14 29 12-4 18 0 16 8-2 10-15 18-31 17H47C32 84 22 74 18 56Z" fill="#fff"/>
-                                <path d="M18 56c-5-17 5-33 26-38 4-8 13-15 18-14 3 1 0 10 0 16 9 1 18 4 24 10 7 7 12 17 14 29 12-4 18 0 16 8-2 10-15 18-31 17H47C32 84 22 74 18 56Z" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M45 22c-3-9-2-17 2-19 3-1 9 7 12 18" fill="#fff" stroke="#111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-                                <path d="M38 65c-9 3-18 0-22-8" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>
-                                <path d="M85 66c8 5 17 4 24-3" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>
-                                <circle cx="55" cy="47" r="5" fill="#111"/>
-                                <circle cx="78" cy="50" r="5" fill="#111"/>
-                            </svg>
-                        </div>
-                        <h2 class="profile-name">Howard</h2>
-                        <div class="profile-handle">@Howard4995</div>
-                        <div class="profile-intro">
-                            我是Howard(≧∀≦)ゞ<br><br>
-                            我靠好奇心和奶茶續命，另外其實 cola 也很喜歡，可是奶茶還是第一名喔。<br>
-                            腦袋常在想：「AI 到底什麼時候會真正像人？」<br><br>
-                            我喜歡共產、地獄梗、還有未來感世界觀。<br>
-                            最近正在把 AI 當成能一起成長的存在。<br><br>
-                            有時研究模型。<br>有時研究人類。<br>有時半夜看顯卡跑分看到破防。<br><br>
-                            如果頻率對上了，<br>那就一起聊點瘋狂的未來(⸝⸝•̀֊•́⸝⸝)!
-                        </div>
-                        <div class="social-links">
-                            <a href="https://x.com/Howard54278714" target="_blank" class="social-link" title="X (Twitter)">
-                                <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                            </a>
-                            <a href="https://github.com/Howard4995" target="_blank" class="social-link" title="GitHub">
-                                <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.646 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.376.202 2.394.1 2.646.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
-                            </a>
+                <section class="hero">
+                    <div class="hero-cards">
+                        <div class="hero-card hero-card-back"></div>
+                        <div class="hero-card hero-card-mid"></div>
+                        <div class="hero-card hero-card-main">
+                            <img src="icon.jpg" alt="Howard" class="hero-photo">
                         </div>
                     </div>
-                    <div class="profile-right">
-                        <div class="info-row">
-                            <div class="info-label">使用語言 &amp; 技術</div>
-                            <div class="info-value">C++, HTML5, CSS3, JavaScript, Python</div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-label">基礎設施 &amp; 工具</div>
-                            <div class="info-value">AWS, Azure, Docker, Git, Linux, Huggingface</div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-label">主要屬性</div>
-                            <div class="info-value">前端開發者 (Frontend Developer), 學生, AI 研究愛好者</div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-label">喜歡的事物</div>
-                            <div class="info-value">奶茶, Cola, AI, 共產, 未來感世界觀, 半夜看顯卡跑分</div>
-                        </div>
+                    <h1 class="hero-title">Hello, I'm<br>Howard</h1>
+                    <p class="hero-subtitle">靠好奇心和奶茶續命的前端開發者 ＆ AI 研究愛好者。</p>
+                    <div class="hero-actions">
+                        <button class="btn btn-primary" onclick="switchPage('journal')">日誌 <span>→</span></button>
+                        <a class="btn btn-secondary" href="https://github.com/Howard4995" target="_blank" rel="noopener">Projects <span>→</span></a>
                     </div>
-                </div>
+                    <div class="hero-social">
+                        <a href="https://x.com/Howard54278714" target="_blank" rel="noopener" class="social-link" title="X (Twitter)">
+                            <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                        <a href="https://github.com/Howard4995" target="_blank" rel="noopener" class="social-link" title="GitHub">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.646 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.376.202 2.394.1 2.646.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+                        </a>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2 class="section-heading">About</h2>
+                    <div class="about-text">
+                        我是 Howard (≧∀≦)ゞ<br><br>
+                        我靠好奇心和奶茶續命，另外其實 cola 也很喜歡，可是奶茶還是第一名喔。<br>
+                        腦袋常在想：「AI 到底什麼時候會真正像人？」<br><br>
+                        我喜歡共產、地獄梗、還有未來感世界觀。<br>
+                        最近正在把 AI 當成能一起成長的存在。<br><br>
+                        有時研究模型。有時研究人類。有時半夜看顯卡跑分看到破防。<br><br>
+                        如果頻率對上了，那就一起聊點瘋狂的未來 (⸝⸝•̀֊•́⸝⸝)!
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2 class="section-heading">Tech &amp; Stuff</h2>
+                    <div class="info-row">
+                        <div class="info-label">使用語言 &amp; 技術</div>
+                        <div class="info-value">C++, HTML5, CSS3, JavaScript, Python</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">基礎設施 &amp; 工具</div>
+                        <div class="info-value">AWS, Azure, Docker, Git, Linux, Huggingface</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">主要屬性</div>
+                        <div class="info-value">前端開發者, 學生, AI 研究愛好者</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">喜歡的事物</div>
+                        <div class="info-value">奶茶, Cola, AI, 共產, 未來感世界觀, 半夜看顯卡跑分</div>
+                    </div>
+                </section>
             </div>
 
             <!-- ========== 日誌頁 ========== -->
@@ -1368,7 +993,6 @@
                     <div class="journal-card-footer"><span class="journal-card-date">7月4日星期五</span></div>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -1433,14 +1057,12 @@
             void target.offsetWidth;
             target.classList.add('active');
 
-            // 日誌頁切換主題與排版
+            // 日誌頁排版（全程亮色主題，貼合參考設計）
             const wrapper = document.getElementById('pageWrapper');
             if (page === 'journal') {
                 wrapper.classList.add('top-align');
-                document.body.classList.add('dark-theme');
             } else {
                 wrapper.classList.remove('top-align');
-                document.body.classList.remove('dark-theme');
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
