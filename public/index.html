@@ -660,15 +660,23 @@
         .journal-empty-icon { font-size: 3rem; margin-bottom: 12px; }
         .journal-empty-text { font-size: 1rem; }
 
-        /* ========== Notion 圖片 ========== */
+        /* ========== Notion 圖片（Threads 風格）========== */
         .notion-image {
+            display: block;
             width: 100%;
             max-width: 100%;
+            height: auto;
             border-radius: 12px;
-            object-fit: cover;
-            aspect-ratio: 16/9;
             cursor: pointer;
             margin-top: 10px;
+        }
+        .notion-image + .notion-image {
+            margin-top: 6px;
+        }
+
+        /* ========== 推文嵌入（Twitter widget 容器）========== */
+        .twitter-tweet {
+            margin-top: 10px !important;
         }
 
         /* ========== 圖片燈箱 ========== */
@@ -1544,7 +1552,7 @@
             template.innerHTML = html || '';
 
             // Includes U/S for underline + strikethrough annotations from Notion.
-            const allowedTags = new Set(['P', 'BR', 'H2', 'H3', 'H4', 'UL', 'LI', 'CODE', 'STRONG', 'EM', 'U', 'S', 'A', 'IMG']);
+            const allowedTags = new Set(['P', 'BR', 'H2', 'H3', 'H4', 'UL', 'LI', 'CODE', 'STRONG', 'EM', 'U', 'S', 'A', 'IMG', 'FIGURE', 'FIGCAPTION', 'BLOCKQUOTE']);
             const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT);
             const nodesToRemove = [];
 
@@ -1558,8 +1566,11 @@
                 [...node.attributes].forEach((attr) => {
                     const isAnchor = node.tagName === 'A';
                     const isImage = node.tagName === 'IMG';
-                    const allowedAttr = (isAnchor && ['href', 'target', 'rel'].includes(attr.name))
-                        || (isImage && ['src', 'alt', 'class'].includes(attr.name));
+                    const isBlockquote = node.tagName === 'BLOCKQUOTE';
+                    const allowedAttr = (isAnchor && ['href', 'target', 'rel', 'class'].includes(attr.name))
+                        || (isImage && ['src', 'alt', 'class'].includes(attr.name))
+                        || (['FIGURE', 'FIGCAPTION'].includes(node.tagName) && attr.name === 'class')
+                        || (isBlockquote && ['class', 'data-theme'].includes(attr.name));
                     if (!allowedAttr) node.removeAttribute(attr.name);
                 });
 
@@ -1650,6 +1661,7 @@
                 const safeHtml = sanitizeHtml(html);
                 body.innerHTML = safeHtml.trim() ? safeHtml : '<p>（此則日誌內容為空白）</p>';
                 card.dataset.loaded = 'true';
+                if (body.querySelector('.twitter-tweet')) loadTwitterWidgets();
             } catch (error) {
                 console.error(error);
                 body.innerHTML = '<p>讀取失敗，請稍後再試。</p>';
@@ -1727,6 +1739,20 @@
                     emptyEl.querySelector('.journal-empty-text').textContent = '日誌載入失敗。';
                 }
             }
+        };
+
+        // ========== Twitter Widget 載入 ==========
+        const loadTwitterWidgets = () => {
+            if (window.twttr && window.twttr.widgets) {
+                window.twttr.widgets.load();
+                return;
+            }
+            if (document.querySelector('script[src*="platform.twitter.com/widgets.js"]')) return;
+            const script = document.createElement('script');
+            script.src = 'https://platform.twitter.com/widgets.js';
+            script.async = true;
+            script.charset = 'utf-8';
+            document.head.appendChild(script);
         };
 
         // ========== 圖片燈箱功能 ==========
