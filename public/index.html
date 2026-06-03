@@ -674,9 +674,36 @@
             margin-top: 6px;
         }
 
-        /* ========== 推文嵌入（Twitter widget 容器）========== */
+        /* ========== 推文嵌入（Twitter oEmbed + widget）========== */
         .twitter-tweet {
             margin-top: 10px !important;
+        }
+        /* oEmbed 失敗時的 fallback 連結卡片 */
+        a.tweet-embed {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            margin-top: 10px;
+            background: var(--hover-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            overflow: hidden;
+            word-break: break-all;
+            transition: background 0.2s ease;
+        }
+        a.tweet-embed::before {
+            content: '𝕏';
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            flex-shrink: 0;
+        }
+        a.tweet-embed:hover {
+            background: var(--border-color);
         }
 
         /* ========== 圖片燈箱 ========== */

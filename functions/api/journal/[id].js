@@ -1,6 +1,7 @@
 import { DEFAULT_NOTION_VERSION } from '../../_shared/notion.js';
 
 const NOTION_API_BASE = 'https://api.notion.com/v1';
+const TWEET_URL_RE = /^https?:\/\/(www\.)?(twitter|x)\.com\//;
 
 const buildCorsHeaders = (env) => ({
   'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || '*',
@@ -62,7 +63,27 @@ const renderRichText = (richText = []) =>
     })
     .join('');
 
-const renderBlock = (block, entryId) => {
+// Fetch oEmbed HTML from Twitter's public endpoint (no auth required).
+// Returns the pre-rendered blockquote HTML, or null on failure.
+const fetchTweetOEmbed = async (url) => {
+  try {
+    const oembedUrl =
+      `https://publish.twitter.com/oembed` +
+      `?url=${encodeURIComponent(url)}&omit_script=1&theme=dark&dnt=true`;
+    const res = await fetch(oembedUrl, { signal: AbortSignal.timeout(4000) });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.html || null;
+  } catch {
+    return null;
+  }
+};
+
+// Fallback styled link card when oEmbed is unavailable.
+const tweetFallback = (url) =>
+  `<a class="tweet-embed" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`;
+
+const renderBlock = (block, entryId, oembedCache) => {
   switch (block.type) {
     case 'paragraph': {
       const content = renderRichText(block.paragraph?.rich_text || []);
@@ -97,9 +118,9 @@ const renderBlock = (block, entryId) => {
     case 'embed': {
       const url = block.embed?.url || '';
       if (!url) return '';
-      const isTweet = /^https?:\/\/(www\.)?(twitter|x)\.com\//.test(url);
-      if (isTweet) {
-        return `<blockquote class="twitter-tweet" data-theme="dark"><a href="${escapeHtml(url)}"></a></blockquote>`;
+      if (TWEET_URL_RE.test(url)) {
+        const oembed = oembedCache?.get(url);
+        return oembed || tweetFallback(url);
       }
       return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`;
     }
@@ -114,7 +135,26 @@ const renderBlock = (block, entryId) => {
   }
 };
 
-const blocksToHtml = (blocks, entryId) => {
+const blocksToHtml = async (blocks, entryId) => {
+  // Pre-fetch all tweet oEmbeds in parallel before rendering.
+  const tweetUrls = [
+    ...new Set(
+      blocks
+        .filter((b) => b.type === 'embed' && TWEET_URL_RE.test(b.embed?.url || ''))
+        .map((b) => b.embed.url),
+    ),
+  ];
+
+  const oembedCache = new Map();
+  if (tweetUrls.length) {
+    await Promise.all(
+      tweetUrls.map(async (url) => {
+        const html = await fetchTweetOEmbed(url);
+        if (html) oembedCache.set(url, html);
+      }),
+    );
+  }
+
   const htmlParts = [];
   let listItems = [];
   let listType = null;
@@ -137,7 +177,7 @@ const blocksToHtml = (blocks, entryId) => {
       flushList();
       listType = block.type;
     }
-    listItems.push(renderBlock(block, entryId));
+    listItems.push(renderBlock(block, entryId, oembedCache));
   };
 
   blocks.forEach((block) => {
@@ -145,9 +185,8 @@ const blocksToHtml = (blocks, entryId) => {
       pushListItem(block);
       return;
     }
-
     flushList();
-    const rendered = renderBlock(block, entryId);
+    const rendered = renderBlock(block, entryId, oembedCache);
     if (rendered) htmlParts.push(rendered);
   });
 
@@ -193,25 +232,19 @@ export const onRequest = async ({ request, env, params }) => {
       const errorText = await response.text();
       console.error('Notion API error', errorText);
       return jsonResponse(
-        {
-          error: 'Notion API error',
-          details: response.statusText,
-        },
+        { error: 'Notion API error', details: response.statusText },
         response.status,
         corsHeaders,
       );
     }
 
     const data = await response.json();
-    const html = blocksToHtml(data.results || [], entryId);
+    const html = await blocksToHtml(data.results || [], entryId);
     return textResponse(html, 200, corsHeaders);
   } catch (error) {
     console.error('Failed to fetch journal entry', error);
     return jsonResponse(
-      {
-        error: 'Failed to fetch journal entry',
-        details: error.message,
-      },
+      { error: 'Failed to fetch journal entry', details: error.message },
       500,
       corsHeaders,
     );
