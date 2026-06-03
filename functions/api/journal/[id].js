@@ -88,6 +88,26 @@ const renderBlock = (block, entryId) => {
       const content = renderRichText(block.ordered_list_item?.rich_text || []);
       return `<li>${content}</li>`;
     }
+    case 'image': {
+      const url = block.image?.file?.url || block.image?.external?.url || '';
+      if (!url) return '';
+      const captionText = (block.image?.caption || []).map((t) => t.plain_text || '').join('');
+      return `<img class="notion-image" src="${escapeHtml(url)}" alt="${escapeHtml(captionText)}" />`;
+    }
+    case 'embed': {
+      const url = block.embed?.url || '';
+      if (!url) return '';
+      const isTweet = /^https?:\/\/(www\.)?(twitter|x)\.com\//.test(url);
+      if (isTweet) {
+        return `<a class="tweet-embed" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`;
+      }
+      return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`;
+    }
+    case 'bookmark': {
+      const url = block.bookmark?.url || '';
+      if (!url) return '';
+      return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`;
+    }
     default:
       console.warn('Unsupported Notion block type', { type: block.type, entryId });
       return '';

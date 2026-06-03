@@ -660,15 +660,56 @@
         .journal-empty-icon { font-size: 3rem; margin-bottom: 12px; }
         .journal-empty-text { font-size: 1rem; }
 
-        /* ========== Notion 圖片 ========== */
+        /* ========== Notion 圖片（Threads 風格）========== */
         .notion-image {
+            display: block;
             width: 100%;
             max-width: 100%;
+            height: auto;
             border-radius: 12px;
-            object-fit: cover;
-            aspect-ratio: 16/9;
             cursor: pointer;
             margin-top: 10px;
+        }
+        .notion-image + .notion-image {
+            margin-top: 6px;
+        }
+
+        /* ========== 推文嵌入卡片 ========== */
+        a.tweet-embed {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
+            margin-top: 10px;
+            background: var(--hover-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            overflow: hidden;
+            word-break: break-all;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+        a.tweet-embed::before {
+            content: '';
+            display: block;
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            background: var(--text-primary);
+            -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z'/%3E%3C/svg%3E");
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z'/%3E%3C/svg%3E");
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            margin-top: 1px;
+            opacity: 0.7;
+        }
+        a.tweet-embed:hover {
+            background: var(--border-color);
+            border-color: var(--text-secondary);
         }
 
         /* ========== 圖片燈箱 ========== */
@@ -1544,7 +1585,7 @@
             template.innerHTML = html || '';
 
             // Includes U/S for underline + strikethrough annotations from Notion.
-            const allowedTags = new Set(['P', 'BR', 'H2', 'H3', 'H4', 'UL', 'LI', 'CODE', 'STRONG', 'EM', 'U', 'S', 'A', 'IMG']);
+            const allowedTags = new Set(['P', 'BR', 'H2', 'H3', 'H4', 'UL', 'LI', 'CODE', 'STRONG', 'EM', 'U', 'S', 'A', 'IMG', 'FIGURE', 'FIGCAPTION']);
             const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT);
             const nodesToRemove = [];
 
@@ -1558,8 +1599,9 @@
                 [...node.attributes].forEach((attr) => {
                     const isAnchor = node.tagName === 'A';
                     const isImage = node.tagName === 'IMG';
-                    const allowedAttr = (isAnchor && ['href', 'target', 'rel'].includes(attr.name))
-                        || (isImage && ['src', 'alt', 'class'].includes(attr.name));
+                    const allowedAttr = (isAnchor && ['href', 'target', 'rel', 'class'].includes(attr.name))
+                        || (isImage && ['src', 'alt', 'class'].includes(attr.name))
+                        || (['FIGURE', 'FIGCAPTION'].includes(node.tagName) && attr.name === 'class');
                     if (!allowedAttr) node.removeAttribute(attr.name);
                 });
 
