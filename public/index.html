@@ -726,98 +726,16 @@
             background: var(--border-color);
         }
 
-        .tweet-card {
-            display: block;
+        /* 官方 X 嵌入 iframe 容器 */
+        .tweet-embed-frame {
             margin-top: 10px;
-            padding: 14px 16px;
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            text-decoration: none;
-            color: var(--text-primary);
-            transition: border-color 0.2s ease;
+            max-width: 550px;
         }
-        .tweet-card:hover {
-            border-color: var(--text-secondary);
-        }
-        .tweet-card-head {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .tweet-card-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            flex-shrink: 0;
-        }
-        .tweet-card-id {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            flex: 1;
-        }
-        .tweet-card-name {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: var(--text-primary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .tweet-card-name .tweet-verified {
-            width: 16px;
-            height: 16px;
-            flex-shrink: 0;
-            fill: #1d9bf0;
-        }
-        .tweet-card-handle {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-        .tweet-card-logo {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-            fill: var(--text-primary);
-        }
-        .tweet-card-text {
-            margin: 12px 0 0;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: var(--text-primary);
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        .tweet-card-text a {
-            color: #1d9bf0;
-            text-decoration: none;
-        }
-        .tweet-card-media {
-            margin-top: 12px;
-            display: grid;
-            gap: 4px;
-            border-radius: 14px;
-            overflow: hidden;
-        }
-        .tweet-card-media.cols-2 { grid-template-columns: 1fr 1fr; }
-        .tweet-card-media.cols-2 img,
-        .tweet-card-media.cols-3 img,
-        .tweet-card-media.cols-4 img { aspect-ratio: 1 / 1; }
-        .tweet-card-media img {
+        .tweet-embed-frame iframe {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            border: 0;
+            border-radius: 14px;
             display: block;
-        }
-        .tweet-card-date {
-            margin-top: 12px;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
         }
 
         /* ========== 圖片燈箱 ========== */
@@ -1890,105 +1808,59 @@
             }
         };
 
-        // ========== 推文卡片（透過 syndication API 自繪）==========
-        // X 官方的 widgets.js 在改版後不穩定，改用 react-tweet 同源的
-        // cdn.syndication.twimg.com 取得推文 JSON，再自己渲染成卡片。
-        const xLogoSvg = '<svg class="tweet-card-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
-        const verifiedSvg = '<svg class="tweet-verified" viewBox="0 0 24 24" aria-hidden="true"><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.91 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.2 3.91-.81s1.27-2.52.81-3.91c1.31-.67 2.19-1.91 2.19-3.34zm-11.71 4.2L6.8 12.46l1.41-1.42 2.26 2.26 4.8-5.23 1.47 1.36-6.2 6.77z"/></svg>';
+        // ========== 推文嵌入（X 官方 embed iframe）==========
+        // 直接用 X 官方文件記載的嵌入 iframe（widgets.js 內部用的同一個渲染器）。
+        // iframe 由瀏覽器直接載入 platform.twitter.com，不需 widgets.js、不碰 CORS。
+        // 高度由 iframe 透過 postMessage 回報，逾時未回報則還原為連結卡片。
+        const TWEET_FRAME_ORIGIN = 'https://platform.twitter.com';
+        const tweetFrames = [];
 
-        const buildTweetCard = (data, fallbackHref) => {
-            const card = document.createElement('a');
-            card.className = 'tweet-card';
-            card.href = data?.user?.screen_name && data?.id_str
-                ? `https://x.com/${data.user.screen_name}/status/${data.id_str}`
-                : fallbackHref;
-            card.target = '_blank';
-            card.rel = 'noopener noreferrer';
-
-            const head = document.createElement('div');
-            head.className = 'tweet-card-head';
-
-            if (data.user?.profile_image_url_https) {
-                const avatar = document.createElement('img');
-                avatar.className = 'tweet-card-avatar';
-                avatar.src = data.user.profile_image_url_https;
-                avatar.alt = data.user.name || '';
-                head.appendChild(avatar);
-            }
-
-            const idWrap = document.createElement('div');
-            idWrap.className = 'tweet-card-id';
-            const nameEl = document.createElement('div');
-            nameEl.className = 'tweet-card-name';
-            nameEl.textContent = data.user?.name || '';
-            if (data.user?.is_blue_verified || data.user?.verified) {
-                nameEl.insertAdjacentHTML('beforeend', verifiedSvg);
-            }
-            const handleEl = document.createElement('div');
-            handleEl.className = 'tweet-card-handle';
-            handleEl.textContent = data.user?.screen_name ? '@' + data.user.screen_name : '';
-            idWrap.appendChild(nameEl);
-            idWrap.appendChild(handleEl);
-            head.appendChild(idWrap);
-            head.insertAdjacentHTML('beforeend', xLogoSvg);
-            card.appendChild(head);
-
-            const textVal = data.text || data.full_text || '';
-            if (textVal) {
-                const textEl = document.createElement('p');
-                textEl.className = 'tweet-card-text';
-                // 去掉結尾的媒體短連結（t.co），保留純文字
-                textEl.textContent = textVal.replace(/\s*https:\/\/t\.co\/\w+\s*$/, '');
-                card.appendChild(textEl);
-            }
-
-            const photos = (data.mediaDetails || [])
-                .filter((m) => m && (m.type === 'photo' || m.media_url_https))
-                .map((m) => m.media_url_https)
-                .filter(Boolean);
-            if (photos.length) {
-                const media = document.createElement('div');
-                media.className = 'tweet-card-media cols-' + Math.min(photos.length, 4);
-                photos.slice(0, 4).forEach((src) => {
-                    const img = document.createElement('img');
-                    img.src = src;
-                    img.alt = '';
-                    img.loading = 'lazy';
-                    media.appendChild(img);
-                });
-                card.appendChild(media);
-            }
-
-            if (data.created_at) {
-                const dateEl = document.createElement('div');
-                dateEl.className = 'tweet-card-date';
-                const d = new Date(data.created_at);
-                dateEl.textContent = isNaN(d.getTime())
-                    ? ''
-                    : d.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
-                card.appendChild(dateEl);
-            }
-
-            return card;
-        };
+        window.addEventListener('message', (e) => {
+            if (e.origin !== TWEET_FRAME_ORIGIN) return;
+            const payload = e.data && e.data['twttr.embed'];
+            if (!payload || payload.method !== 'twttr.private.resize') return;
+            const params = Array.isArray(payload.params) ? payload.params : [];
+            const height = params[0] && params[0].height;
+            tweetFrames.forEach((entry) => {
+                if (entry.iframe.contentWindow === e.source && height) {
+                    entry.iframe.style.height = height + 'px';
+                    entry.onReady();
+                }
+            });
+        });
 
         const upgradeTweets = (container) => {
             const anchors = container.querySelectorAll('a.tweet-embed[data-tweet-id]');
-            anchors.forEach(async (anchor) => {
+            anchors.forEach((anchor) => {
                 const id = anchor.dataset.tweetId;
-                if (!id) return;
-                try {
-                    // 走同源代理（伺服器端抓 syndication），避開瀏覽器 CORS 限制
-                    const res = await fetch(`/api/tweet/${id}`);
-                    if (!res.ok) return; // 失敗就保留 fallback 連結卡片
-                    const data = await res.json();
-                    if (!data || (!data.text && !data.user)) return;
-                    const cardEl = buildTweetCard(data, anchor.href);
-                    anchor.replaceWith(cardEl);
-                } catch (error) {
-                    console.warn('Tweet upgrade failed', error);
-                    // 保留原本的 fallback 連結卡片
-                }
+                if (!/^[0-9]+$/.test(id || '')) return;
+
+                const wrap = document.createElement('div');
+                wrap.className = 'tweet-embed-frame';
+
+                const iframe = document.createElement('iframe');
+                iframe.src = `${TWEET_FRAME_ORIGIN}/embed/Tweet.html?id=${encodeURIComponent(id)}`
+                    + '&theme=dark&dnt=true&width=550&lang=zh-tw';
+                iframe.title = 'X 貼文';
+                iframe.loading = 'lazy';
+                iframe.scrolling = 'no';
+                iframe.setAttribute('frameborder', '0');
+                iframe.setAttribute('allowtransparency', 'true');
+                iframe.style.height = '320px'; // 初始高度，收到 resize 訊息後調整
+
+                // 逾時仍未收到高度回報 → 視為載入失敗，還原連結卡片
+                let ready = false;
+                const fallbackTimer = setTimeout(() => {
+                    if (!ready) wrap.replaceWith(anchor.cloneNode(true));
+                }, 8000);
+
+                tweetFrames.push({
+                    iframe,
+                    onReady: () => { ready = true; clearTimeout(fallbackTimer); },
+                });
+
+                wrap.appendChild(iframe);
+                anchor.replaceWith(wrap);
             });
         };
 
