@@ -2,6 +2,8 @@ const NOTION_API_BASE = 'https://api.notion.com/v1';
 const DEFAULT_NOTION_VERSION = '2022-06-28';
 const DEFAULT_TITLE = '（無標題）';
 
+const TWEETS_KV_KEY = 'tweet_ids';
+
 const buildCorsHeaders = (env) => ({
   'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -176,8 +178,8 @@ const handleJournalList = async (request, env) => {
     return jsonResponse({ error: 'Method not allowed' }, 405, corsHeaders);
   }
 
-  const notionToken = env.NOTION_TOKEN;
-  const notionDbId = env.NOTION_DB_ID;
+  const notionToken = (env.NOTION_TOKEN || '').trim();
+  const notionDbId = (env.NOTION_DB_ID || '').trim();
   const notionVersion = env.NOTION_VERSION || DEFAULT_NOTION_VERSION;
 
   if (!notionToken || !notionDbId) {
@@ -251,7 +253,7 @@ const handleJournalEntry = async (request, env, entryId) => {
     return jsonResponse({ error: 'Method not allowed' }, 405, corsHeaders);
   }
 
-  const notionToken = env.NOTION_TOKEN;
+  const notionToken = (env.NOTION_TOKEN || '').trim();
   const notionVersion = env.NOTION_VERSION || DEFAULT_NOTION_VERSION;
 
   if (!notionToken) {
@@ -302,6 +304,37 @@ const handleJournalEntry = async (request, env, entryId) => {
   }
 };
 
+const handleTweets = async (request, env) => {
+  const corsHeaders = buildCorsHeaders(env);
+
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
+  if (request.method !== 'GET') {
+    return jsonResponse({ error: 'Method not allowed' }, 405, corsHeaders);
+  }
+
+  const url = new URL(request.url);
+  const page = Math.max(0, parseInt(url.searchParams.get('page') || '0', 10));
+  const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get('limit') || '20', 10)));
+
+  if (!env.RETWEETS_KV) {
+    return jsonResponse({ tweet_ids: [], total: 0, page, limit }, 200, corsHeaders);
+  }
+
+  try {
+    const raw = await env.RETWEETS_KV.get(TWEETS_KV_KEY);
+    const allIds = raw ? (raw.match(/\d{10,}/g) || []) : [];
+    const start = page * limit;
+    const slice = allIds.slice(start, start + limit);
+    return jsonResponse({ tweet_ids: slice, total: allIds.length, page, limit }, 200, corsHeaders);
+  } catch (error) {
+    console.error('Failed to read tweets from KV', error);
+    return jsonResponse({ tweet_ids: [], total: 0, page, limit }, 200, corsHeaders);
+  }
+};
+
 export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
@@ -315,6 +348,11 @@ export default {
       return handleJournalEntry(request, env, journalMatch[1]);
     }
 
+    if (pathname === '/api/tweets' || pathname === '/api/tweets/') {
+      return handleTweets(request, env);
+    }
+
     return env.ASSETS.fetch(request);
   },
+
 };

@@ -2,10 +2,19 @@
   "name": "profile",
   "compatibility_date": "2026-05-28",
   "main": "src/index.js",
+  "routes": [
+    { "pattern": "howardx.me", "custom_domain": true }
+  ],
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
-  }
+  },
+  "kv_namespaces": [
+    {
+      "binding": "RETWEETS_KV",
+      "id": "0d5c09fa29e944bf90b10c366fecdbc0"
+    }
+  ]
 }

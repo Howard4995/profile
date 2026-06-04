@@ -222,6 +222,7 @@
         }
         .side-menu.open .menu-item:nth-child(1) { transition-delay: 0.08s; }
         .side-menu.open .menu-item:nth-child(2) { transition-delay: 0.18s; }
+        .side-menu.open .menu-item:nth-child(3) { transition-delay: 0.28s; }
 
         .menu-item:hover {
             color: var(--text-primary);
@@ -599,6 +600,47 @@
         .journal-entry-body p {
             margin: 0 0 12px;
         }
+        .journal-entry-body img.notion-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin: 8px 0;
+            display: block;
+        }
+        /* Image gallery wraps in journal content — same look as notion-gallery */
+        .journal-entry-body .notion-gallery {
+            margin-top: 10px;
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            border-radius: 14px;
+        }
+        .journal-entry-body .notion-gallery::-webkit-scrollbar {
+            display: none;
+        }
+        .journal-entry-body .notion-gallery .notion-image {
+            flex: 0 0 auto;
+            height: 220px;
+            width: auto;
+            max-width: 85%;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            scroll-snap-align: start;
+            display: block;
+            margin: 0;
+        }
+        .journal-entry-body .notion-gallery:not(.is-multi) .notion-image {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            max-height: 400px;
+            object-fit: contain;
+        }
         .journal-entry-body h2,
         .journal-entry-body h3,
         .journal-entry-body h4 {
@@ -744,6 +786,24 @@
             width: calc(100% + 60px);
             max-width: none;
             box-sizing: border-box;
+        }
+
+        /* ========== X 推文頁 ========== */
+        .tweets-list {
+            max-width: 550px;
+            margin: 0 auto;
+        }
+        .tweets-list .tweet-embed-frame {
+            margin-top: 0;
+            margin-bottom: 16px;
+            max-width: none;
+            width: 100%;
+        }
+        .tweets-load-more {
+            text-align: center;
+            padding: 24px 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
         }
 
         /* ========== 圖片燈箱 ========== */
@@ -929,6 +989,9 @@
         <button class="menu-item" data-page="journal" onclick="switchPage('journal')">
             日誌
         </button>
+        <button class="menu-item" data-page="retweets" onclick="switchPage('retweets')">
+            X 推文
+        </button>
         <div class="menu-divider"></div>
     </nav>
 
@@ -956,6 +1019,13 @@
                         <line x1="3" y1="6" x2="3.01" y2="6"></line>
                         <line x1="3" y1="12" x2="3.01" y2="12"></line>
                         <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                </div>
+            </button>
+            <button class="nav-btn" data-page="retweets" onclick="switchPage('retweets')">
+                <div class="btn-content">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                     </svg>
                 </div>
             </button>
@@ -1444,6 +1514,27 @@
                 </div>
             </div>
 
+            <!-- ========== X 推文預覽頁 ========== -->
+            <div class="page-view" id="page-retweets">
+                <div class="journal-header">
+                    <button class="journal-back" onclick="switchPage('profile')" title="返回">
+                        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <div class="journal-title">X 推文</div>
+                </div>
+
+                <div id="tweetsList" class="tweets-list"></div>
+                <div id="tweetsLoading" class="journal-empty">
+                    <div class="journal-empty-icon">⏳</div>
+                    <div class="journal-empty-text">載入中...</div>
+                </div>
+                <div id="tweetsEmpty" class="journal-empty" hidden>
+                    <div class="journal-empty-icon">🐦</div>
+                    <div class="journal-empty-text">目前沒有推文。</div>
+                </div>
+                <div id="tweetsLoadMore" class="tweets-load-more" hidden>載入更多...</div>
+            </div>
+
         </div>
     </div>
 
@@ -1513,6 +1604,10 @@
             if (page === 'journal') {
                 wrapper.classList.add('top-align');
                 document.body.classList.add('dark-theme');
+            } else if (page === 'retweets') {
+                wrapper.classList.add('top-align');
+                document.body.classList.add('dark-theme');
+                loadTweets();
             } else {
                 wrapper.classList.remove('top-align');
                 document.body.classList.remove('dark-theme');
@@ -1710,6 +1805,47 @@
 
         const entryBodyLoadingHtml = '<p class="journal-entry-loading">載入中...</p>';
 
+        const wrapImageGallery = (container) => {
+            const images = [...container.querySelectorAll('img.notion-image')];
+            if (!images.length) return;
+
+            // Group consecutive images (images that are direct siblings, possibly separated only by <br>)
+            const groups = [];
+            let group = [];
+            for (const img of images) {
+                const prev = group[group.length - 1];
+                if (!prev) {
+                    group.push(img);
+                } else {
+                    // Walk from prev to img — if only <br> or whitespace text nodes between, they're consecutive
+                    let sibling = prev.nextSibling;
+                    let onlyWhitespace = true;
+                    while (sibling && sibling !== img) {
+                        const isBr = sibling.nodeType === 1 && sibling.tagName === 'BR';
+                        const isWhitespace = sibling.nodeType === 3 && !sibling.textContent.trim();
+                        if (!isBr && !isWhitespace) { onlyWhitespace = false; break; }
+                        sibling = sibling.nextSibling;
+                    }
+                    if (onlyWhitespace) {
+                        group.push(img);
+                    } else {
+                        groups.push(group);
+                        group = [img];
+                    }
+                }
+            }
+            if (group.length) groups.push(group);
+
+            groups.forEach((group) => {
+                if (group.length === 0) return;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'notion-gallery';
+                if (group.length > 1) wrapper.classList.add('is-multi');
+                const first = group[0];
+                first.before(wrapper);
+                group.forEach((img) => wrapper.appendChild(img));
+            });
+        };
         const loadEntryBody = async (card) => {
             const entryId = card.dataset.entryId;
             const body = card.querySelector('.journal-entry-body');
@@ -1727,6 +1863,7 @@
                 const html = await response.text();
                 const safeHtml = sanitizeHtml(html);
                 body.innerHTML = safeHtml.trim() ? safeHtml : '<p>（此則日誌內容為空白）</p>';
+                wrapImageGallery(body);
                 card.dataset.loaded = 'true';
                 upgradeTweets(body);
             } catch (error) {
@@ -1807,6 +1944,83 @@
                 }
             }
         };
+
+        // ========== X 推文（KV 推文 ID + iframe embed + 無限滾動）==========
+        let tweetsPage = 0;
+        let tweetsTotal = 0;
+        let tweetsLoading = false;
+        let tweetsInitialized = false;
+
+        const loadTweets = async (reset) => {
+            if (tweetsLoading) return;
+            if (!reset && tweetsInitialized && tweetsPage * 20 >= tweetsTotal) return;
+
+            const listEl = document.getElementById('tweetsList');
+            const loadingEl = document.getElementById('tweetsLoading');
+            const emptyEl = document.getElementById('tweetsEmpty');
+            const moreEl = document.getElementById('tweetsLoadMore');
+            if (!listEl) return;
+
+            if (reset) {
+                tweetsPage = 0;
+                tweetsInitialized = false;
+                listEl.innerHTML = '';
+            }
+
+            tweetsLoading = true;
+            if (!tweetsInitialized) loadingEl.hidden = false;
+            moreEl.hidden = true;
+
+            try {
+                const res = await fetch(`/api/tweets?page=${tweetsPage}&limit=20`);
+                if (!res.ok) throw new Error(res.statusText);
+                const data = await res.json();
+                tweetsTotal = data.total || 0;
+                const ids = data.tweet_ids || [];
+
+                loadingEl.hidden = true;
+                tweetsInitialized = true;
+
+                if (tweetsPage === 0 && !ids.length) {
+                    emptyEl.hidden = false;
+                    return;
+                }
+                emptyEl.hidden = true;
+
+                ids.forEach(id => {
+                    const anchor = document.createElement('a');
+                    anchor.className = 'tweet-embed';
+                    anchor.dataset.tweetId = id;
+                    anchor.href = `https://x.com/i/status/${id}`;
+                    anchor.target = '_blank';
+                    anchor.rel = 'noopener noreferrer';
+                    anchor.textContent = '在 X 上查看推文';
+                    listEl.appendChild(anchor);
+                });
+                upgradeTweets(listEl);
+
+                tweetsPage++;
+                if (tweetsPage * 20 < tweetsTotal) {
+                    moreEl.hidden = false;
+                }
+            } catch (err) {
+                console.error(err);
+                loadingEl.hidden = true;
+                if (!tweetsInitialized) {
+                    emptyEl.hidden = false;
+                    emptyEl.querySelector('.journal-empty-text').textContent = '推文載入失敗。';
+                }
+            } finally {
+                tweetsLoading = false;
+            }
+        };
+
+        // 無限滾動
+        const tweetsScrollObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) loadTweets();
+        }, { rootMargin: '200px' });
+        const moreTarget = document.getElementById('tweetsLoadMore');
+        if (moreTarget) tweetsScrollObserver.observe(moreTarget);
 
         // ========== 推文嵌入（X 官方 embed iframe）==========
         // 直接用 X 官方文件記載的嵌入 iframe（widgets.js 內部用的同一個渲染器）。
