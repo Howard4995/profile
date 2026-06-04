@@ -737,6 +737,14 @@
             display: block;
             transition: height 0.2s ease;
         }
+        /* 在日記卡片內：推文左邊對齊頭像左緣（avatar 44px + gap 16px = 60px） */
+        .journal-card-content .tweet-embed-frame,
+        .journal-card-content a.tweet-embed {
+            margin-left: -60px;
+            width: calc(100% + 60px);
+            max-width: none;
+            box-sizing: border-box;
+        }
 
         /* ========== 圖片燈箱 ========== */
         .image-lightbox {
