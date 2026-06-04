@@ -1,7 +1,7 @@
 import { DEFAULT_NOTION_VERSION } from '../../_shared/notion.js';
 
 const NOTION_API_BASE = 'https://api.notion.com/v1';
-const TWEET_URL_RE = /^https?:\/\/(www\.)?(twitter|x)\.com\//;
+const TWEET_URL_RE = /(?:twitter|x)\.com\/[^/]+\/status(?:es)?\/(\d+)/;
 
 const buildCorsHeaders = (env) => ({
   'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || '*',
@@ -63,27 +63,33 @@ const renderRichText = (richText = []) =>
     })
     .join('');
 
-// Fetch oEmbed HTML from Twitter's public endpoint (no auth required).
-// Returns the pre-rendered blockquote HTML, or null on failure.
-const fetchTweetOEmbed = async (url) => {
-  try {
-    const oembedUrl =
-      `https://publish.twitter.com/oembed` +
-      `?url=${encodeURIComponent(url)}&omit_script=1&theme=dark&dnt=true`;
-    const res = await fetch(oembedUrl, { signal: AbortSignal.timeout(4000) });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.html || null;
-  } catch {
-    return null;
+// Pull a tweet URL out of whichever Notion block type Notion happened to use
+// for an X/Twitter link (embed, bookmark, or link_preview).
+const extractTweetUrl = (block) => {
+  const candidates = [
+    block.embed?.url,
+    block.bookmark?.url,
+    block.link_preview?.url,
+    block.video?.external?.url,
+  ];
+  for (const url of candidates) {
+    if (url && TWEET_URL_RE.test(url)) return url;
   }
+  return null;
 };
 
-// Fallback styled link card when oEmbed is unavailable.
-const tweetFallback = (url) =>
-  `<a class="tweet-embed" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`;
+// Tweets become an anchor carrying the tweet id; the client upgrades it into a
+// full card via the syndication API, and the anchor stays as a graceful
+// fallback if that fetch ever fails.
+const renderTweet = (url) => {
+  const id = (url.match(TWEET_URL_RE) || [])[1] || '';
+  return `<a class="tweet-embed" data-tweet-id="${escapeHtml(id)}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`;
+};
 
-const renderBlock = (block, entryId, oembedCache) => {
+const renderBlock = (block, entryId) => {
+  const tweetUrl = extractTweetUrl(block);
+  if (tweetUrl) return renderTweet(tweetUrl);
+
   switch (block.type) {
     case 'paragraph': {
       const content = renderRichText(block.paragraph?.rich_text || []);
@@ -109,23 +115,18 @@ const renderBlock = (block, entryId, oembedCache) => {
       const content = renderRichText(block.ordered_list_item?.rich_text || []);
       return `<li>${content}</li>`;
     }
-    case 'image': {
-      const url = block.image?.file?.url || block.image?.external?.url || '';
-      if (!url) return '';
-      const captionText = (block.image?.caption || []).map((t) => t.plain_text || '').join('');
-      return `<img class="notion-image" src="${escapeHtml(url)}" alt="${escapeHtml(captionText)}" />`;
-    }
     case 'embed': {
       const url = block.embed?.url || '';
       if (!url) return '';
-      if (TWEET_URL_RE.test(url)) {
-        const oembed = oembedCache?.get(url);
-        return oembed || tweetFallback(url);
-      }
       return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`;
     }
     case 'bookmark': {
       const url = block.bookmark?.url || '';
+      if (!url) return '';
+      return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`;
+    }
+    case 'link_preview': {
+      const url = block.link_preview?.url || '';
       if (!url) return '';
       return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a>`;
     }
@@ -135,29 +136,21 @@ const renderBlock = (block, entryId, oembedCache) => {
   }
 };
 
-const blocksToHtml = async (blocks, entryId) => {
-  // Pre-fetch all tweet oEmbeds in parallel before rendering.
-  const tweetUrls = [
-    ...new Set(
-      blocks
-        .filter((b) => b.type === 'embed' && TWEET_URL_RE.test(b.embed?.url || ''))
-        .map((b) => b.embed.url),
-    ),
-  ];
+const imageUrl = (block) =>
+  block.image?.file?.url || block.image?.external?.url || '';
 
-  const oembedCache = new Map();
-  if (tweetUrls.length) {
-    await Promise.all(
-      tweetUrls.map(async (url) => {
-        const html = await fetchTweetOEmbed(url);
-        if (html) oembedCache.set(url, html);
-      }),
-    );
-  }
+const renderImage = (block) => {
+  const url = imageUrl(block);
+  if (!url) return '';
+  const captionText = (block.image?.caption || []).map((t) => t.plain_text || '').join('');
+  return `<img class="notion-image" src="${escapeHtml(url)}" alt="${escapeHtml(captionText)}" />`;
+};
 
+const blocksToHtml = (blocks, entryId) => {
   const htmlParts = [];
   let listItems = [];
   let listType = null;
+  let imageGroup = [];
 
   const flushList = () => {
     if (!listItems.length) return;
@@ -165,6 +158,18 @@ const blocksToHtml = async (blocks, entryId) => {
     htmlParts.push(`<${tag}>${listItems.join('')}</${tag}>`);
     listItems = [];
     listType = null;
+  };
+
+  // Consecutive image blocks become one gallery so the client can lay them out
+  // Threads-style (single = framed, multiple = horizontal carousel).
+  const flushImages = () => {
+    if (!imageGroup.length) return;
+    const imgs = imageGroup.map(renderImage).filter(Boolean).join('');
+    if (imgs) {
+      const multi = imageGroup.length > 1 ? ' is-multi' : '';
+      htmlParts.push(`<div class="notion-gallery${multi}">${imgs}</div>`);
+    }
+    imageGroup = [];
   };
 
   const isListItem = (block) =>
@@ -177,20 +182,29 @@ const blocksToHtml = async (blocks, entryId) => {
       flushList();
       listType = block.type;
     }
-    listItems.push(renderBlock(block, entryId, oembedCache));
+    listItems.push(renderBlock(block, entryId));
   };
 
   blocks.forEach((block) => {
+    if (block.type === 'image') {
+      flushList();
+      imageGroup.push(block);
+      return;
+    }
+    flushImages();
+
     if (isListItem(block)) {
       pushListItem(block);
       return;
     }
+
     flushList();
-    const rendered = renderBlock(block, entryId, oembedCache);
+    const rendered = renderBlock(block, entryId);
     if (rendered) htmlParts.push(rendered);
   });
 
   flushList();
+  flushImages();
   return htmlParts.join('');
 };
 
@@ -239,7 +253,7 @@ export const onRequest = async ({ request, env, params }) => {
     }
 
     const data = await response.json();
-    const html = await blocksToHtml(data.results || [], entryId);
+    const html = blocksToHtml(data.results || [], entryId);
     return textResponse(html, 200, corsHeaders);
   } catch (error) {
     console.error('Failed to fetch journal entry', error);
