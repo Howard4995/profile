@@ -661,41 +661,36 @@
         .journal-empty-text { font-size: 1rem; }
 
         /* ========== Notion 圖片（Threads 風格）========== */
+        /* 圖片相簿：固定高度水平滑動，單張/多張一致 */
         .notion-gallery {
             margin-top: 10px;
-        }
-        /* 單張：自然比例，圓角外框，最高 600px 防止超長直式圖 */
-        .notion-gallery .notion-image {
-            display: block;
-            width: 100%;
-            max-width: 100%;
-            max-height: 600px;
-            height: auto;
-            object-fit: contain;
-            border-radius: 14px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            background: var(--hover-bg);
-        }
-        /* 多張：水平滑動相簿，每張等高 */
-        .notion-gallery.is-multi {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
-            padding-bottom: 4px;
             scrollbar-width: none;
+            border-radius: 14px;
         }
-        .notion-gallery.is-multi::-webkit-scrollbar {
+        .notion-gallery::-webkit-scrollbar {
             display: none;
         }
-        .notion-gallery.is-multi .notion-image {
+        .notion-gallery .notion-image {
             flex: 0 0 auto;
+            height: 220px;
             width: auto;
-            height: 320px;
-            max-height: 320px;
+            max-width: 85%;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
             scroll-snap-align: start;
+            display: block;
+        }
+        /* 單張：撐滿寬度 */
+        .notion-gallery:not(.is-multi) .notion-image {
+            width: 100%;
+            max-width: 100%;
         }
 
         /* ========== 推文嵌入（自繪 X 卡片）========== */
