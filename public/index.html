@@ -661,22 +661,89 @@
         .journal-empty-text { font-size: 1rem; }
 
         /* ========== Notion 圖片（Threads 風格）========== */
-        .notion-image {
+        /* 圖片相簿：固定高度水平滑動，單張/多張一致 */
+        .notion-gallery {
+            margin-top: 10px;
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            border-radius: 14px;
+        }
+        .notion-gallery::-webkit-scrollbar {
+            display: none;
+        }
+        .notion-gallery .notion-image {
+            flex: 0 0 auto;
+            height: 220px;
+            width: auto;
+            max-width: 85%;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            scroll-snap-align: start;
             display: block;
+        }
+        /* 單張：撐滿寬度 */
+        .notion-gallery:not(.is-multi) .notion-image {
             width: 100%;
             max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .notion-image + .notion-image {
-            margin-top: 6px;
         }
 
-        /* ========== 推文嵌入（Twitter widget 容器）========== */
-        .twitter-tweet {
-            margin-top: 10px !important;
+        /* ========== 推文嵌入（自繪 X 卡片）========== */
+        /* 升級前 / 失敗時的 fallback 連結卡片 */
+        a.tweet-embed {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            margin-top: 10px;
+            background: var(--hover-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            overflow: hidden;
+            word-break: break-all;
+            transition: background 0.2s ease;
+        }
+        a.tweet-embed::before {
+            content: '𝕏';
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            flex-shrink: 0;
+        }
+        a.tweet-embed:hover {
+            background: var(--border-color);
+        }
+
+        /* 官方 X 嵌入 iframe 容器 */
+        .tweet-embed-frame {
+            margin-top: 10px;
+            max-width: 550px;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background: var(--hover-bg);
+        }
+        .tweet-embed-frame iframe {
+            width: 100%;
+            border: 0;
+            display: block;
+            transition: height 0.2s ease;
+        }
+        /* 在日記卡片內：推文左邊對齊頭像左緣（avatar 44px + gap 16px = 60px） */
+        .journal-card-content .tweet-embed-frame,
+        .journal-card-content a.tweet-embed {
+            margin-left: -60px;
+            width: calc(100% + 60px);
+            max-width: none;
+            box-sizing: border-box;
         }
 
         /* ========== 圖片燈箱 ========== */
@@ -964,6 +1031,14 @@
                     </button>
                     <div class="journal-title">日誌</div>
                 </div>
+
+                <!-- ===== 示範推文嵌入（暫時，驗證後移除）===== -->
+                <div class="month-label">示範：推文嵌入</div>
+                <div class="journal-card">
+                    <div class="journal-card-body" style="white-space: pre-wrap;">測試 Notion 推文嵌入卡片：<a class="tweet-embed" data-tweet-id="2062207500846248426" href="https://x.com/0x_kaize/status/2062207500846248426" target="_blank" rel="noopener noreferrer">https://x.com/0x_kaize/status/2062207500846248426</a></div>
+                    <div class="journal-card-footer"><span class="journal-card-date">示範</span></div>
+                </div>
+                <!-- ===== 示範推文嵌入結束 ===== -->
 
                 <div class="month-label">Notion 日誌</div>
                 <div id="journalList" class="journal-list"></div>
@@ -1552,7 +1627,7 @@
             template.innerHTML = html || '';
 
             // Includes U/S for underline + strikethrough annotations from Notion.
-            const allowedTags = new Set(['P', 'BR', 'H2', 'H3', 'H4', 'UL', 'LI', 'CODE', 'STRONG', 'EM', 'U', 'S', 'A', 'IMG', 'FIGURE', 'FIGCAPTION', 'BLOCKQUOTE']);
+            const allowedTags = new Set(['P', 'BR', 'H2', 'H3', 'H4', 'UL', 'LI', 'CODE', 'STRONG', 'EM', 'U', 'S', 'A', 'IMG', 'FIGURE', 'FIGCAPTION', 'DIV']);
             const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT);
             const nodesToRemove = [];
 
@@ -1566,11 +1641,11 @@
                 [...node.attributes].forEach((attr) => {
                     const isAnchor = node.tagName === 'A';
                     const isImage = node.tagName === 'IMG';
-                    const isBlockquote = node.tagName === 'BLOCKQUOTE';
-                    const allowedAttr = (isAnchor && ['href', 'target', 'rel', 'class'].includes(attr.name))
+                    // Anchors may carry data-tweet-id so the client can upgrade
+                    // them into rich tweet cards.
+                    const allowedAttr = (isAnchor && ['href', 'target', 'rel', 'class', 'data-tweet-id'].includes(attr.name))
                         || (isImage && ['src', 'alt', 'class'].includes(attr.name))
-                        || (['FIGURE', 'FIGCAPTION'].includes(node.tagName) && attr.name === 'class')
-                        || (isBlockquote && ['class', 'data-theme'].includes(attr.name));
+                        || (['FIGURE', 'FIGCAPTION', 'DIV'].includes(node.tagName) && attr.name === 'class');
                     if (!allowedAttr) node.removeAttribute(attr.name);
                 });
 
@@ -1661,7 +1736,7 @@
                 const safeHtml = sanitizeHtml(html);
                 body.innerHTML = safeHtml.trim() ? safeHtml : '<p>（此則日誌內容為空白）</p>';
                 card.dataset.loaded = 'true';
-                if (body.querySelector('.twitter-tweet')) loadTwitterWidgets();
+                upgradeTweets(body);
             } catch (error) {
                 console.error(error);
                 body.innerHTML = '<p>讀取失敗，請稍後再試。</p>';
@@ -1741,18 +1816,60 @@
             }
         };
 
-        // ========== Twitter Widget 載入 ==========
-        const loadTwitterWidgets = () => {
-            if (window.twttr && window.twttr.widgets) {
-                window.twttr.widgets.load();
-                return;
-            }
-            if (document.querySelector('script[src*="platform.twitter.com/widgets.js"]')) return;
-            const script = document.createElement('script');
-            script.src = 'https://platform.twitter.com/widgets.js';
-            script.async = true;
-            script.charset = 'utf-8';
-            document.head.appendChild(script);
+        // ========== 推文嵌入（X 官方 embed iframe）==========
+        // 直接用 X 官方文件記載的嵌入 iframe（widgets.js 內部用的同一個渲染器）。
+        // iframe 由瀏覽器直接載入 platform.twitter.com，不需 widgets.js、不碰 CORS。
+        // 高度由 iframe 透過 postMessage 回報，逾時未回報則還原為連結卡片。
+        const TWEET_FRAME_ORIGIN = 'https://platform.twitter.com';
+        const tweetFrames = [];
+
+        window.addEventListener('message', (e) => {
+            if (e.origin !== TWEET_FRAME_ORIGIN) return;
+            const payload = e.data && e.data['twttr.embed'];
+            if (!payload || payload.method !== 'twttr.private.resize') return;
+            const params = Array.isArray(payload.params) ? payload.params : [];
+            const height = params[0] && params[0].height;
+            tweetFrames.forEach((entry) => {
+                if (entry.iframe.contentWindow === e.source && height) {
+                    entry.iframe.style.height = height + 'px';
+                    entry.onReady();
+                }
+            });
+        });
+
+        const upgradeTweets = (container) => {
+            const anchors = container.querySelectorAll('a.tweet-embed[data-tweet-id]');
+            anchors.forEach((anchor) => {
+                const id = anchor.dataset.tweetId;
+                if (!/^[0-9]+$/.test(id || '')) return;
+
+                const wrap = document.createElement('div');
+                wrap.className = 'tweet-embed-frame';
+
+                const iframe = document.createElement('iframe');
+                iframe.src = `${TWEET_FRAME_ORIGIN}/embed/Tweet.html?id=${encodeURIComponent(id)}`
+                    + '&theme=dark&dnt=true&width=550&lang=zh-tw';
+                iframe.title = 'X 貼文';
+                iframe.loading = 'lazy';
+                iframe.scrolling = 'no';
+                iframe.setAttribute('frameborder', '0');
+                iframe.setAttribute('allowtransparency', 'true');
+                iframe.style.height = '150px'; // 初始高度，收到 resize 訊息後調整
+
+                // 逾時仍未收到高度回報 → 視為載入失敗，還原連結卡片
+                let ready = false;
+                const fallbackTimer = setTimeout(() => {
+                    if (!ready) wrap.replaceWith(anchor.cloneNode(true));
+                }, 8000);
+
+                tweetFrames.push({
+                    iframe,
+                    onReady: () => { ready = true; clearTimeout(fallbackTimer); },
+                });
+
+                wrap.appendChild(iframe);
+                anchor.replaceWith(wrap);
+            });
         };
 
         // ========== 圖片燈箱功能 ==========
@@ -1779,6 +1896,7 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             document.querySelectorAll('.journal-card').forEach(formatJournalCard);
+            upgradeTweets(document); // 升級靜態卡片內的推文嵌入
             loadJournalEntries();
         });
     </script>
