@@ -1878,16 +1878,6 @@
             }
         };
 
-        // 只在卡片即將進入可視區時才抓取內文，避免一次對所有日誌發出請求
-        const journalBodyObserver = new IntersectionObserver((entries, obs) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    loadEntryBody(entry.target);
-                    obs.unobserve(entry.target);
-                }
-            });
-        }, { rootMargin: '300px' });
-
         const renderEntryCard = (entry) => {
             const card = document.createElement('div');
             card.className = 'journal-card';
@@ -1923,7 +1913,6 @@
             card.appendChild(footer);
 
             formatJournalCard(card);
-            journalBodyObserver.observe(card);
             return card;
         };
 
@@ -1952,7 +1941,15 @@
                     return;
                 }
 
-                entries.forEach(entry => listEl.appendChild(renderEntryCard(entry)));
+                const cards = entries.map((entry) => {
+                    const card = renderEntryCard(entry);
+                    listEl.appendChild(card);
+                    return card;
+                });
+                // 先載入前 4 則內文（優先），再接著載入其餘全部；
+                // 兩段都 await，使日誌全部載完後才換 X（兩者不同時進行）。
+                await Promise.allSettled(cards.slice(0, 4).map(loadEntryBody));
+                await Promise.allSettled(cards.slice(4).map(loadEntryBody));
             } catch (error) {
                 console.error(error);
                 journalInitialized = false; // 允許下次開啟日誌頁時重試
@@ -2146,11 +2143,15 @@
             // 日誌內容改為切換到日誌頁時才載入（見 switchPage），避免首屏發出大量 API 請求
         });
 
-        // 等首頁資源載入完、瀏覽器空檔時再於背景載入 X 推文，避免影響首屏載入速度。
+        // 等首頁資源載入完、瀏覽器空檔時，於背景依序預載內容，避免影響首屏速度：
+        // 先載 Notion 日誌（前 4 則優先、其餘背景全載），再背景把 X 推文全部預載。
         window.addEventListener('load', () => {
-            const start = () => { autoLoadAllTweets(); };
+            const start = async () => {
+                await loadJournalEntries();
+                autoLoadAllTweets();
+            };
             if ('requestIdleCallback' in window) {
-                requestIdleCallback(start, { timeout: 2000 });
+                requestIdleCallback(() => start(), { timeout: 2000 });
             } else {
                 setTimeout(start, 800);
             }
