@@ -34,10 +34,10 @@ flowchart LR
 
 #### Edge API Layer
 
-- `functions/api/journal.js` exposes `GET /api/journal` for Cloudflare Pages Functions and queries the configured Notion database.
-- `functions/api/journal/[id].js` exposes `GET /api/journal/:id` for Cloudflare Pages Functions and fetches child blocks for an individual Notion page.
-- `functions/_shared/notion.js` stores shared Notion constants used by the Pages Functions.
-- `src/index.js` is the Cloudflare Worker entry configured by `wrangler.jsonc`; it serves `public/` through the `ASSETS` binding and runs worker-first API handling for `/api/*`.
+- `functions/_shared/notion.js` is the **single source of truth** for the journal API: Notion property readers, block→HTML rendering (paragraphs, headings, lists, links, rich-text annotations, image galleries, and X/Twitter embeds), and the `GET /api/journal` / `GET /api/journal/:id` request handlers.
+- `functions/api/journal.js` and `functions/api/journal/[id].js` are thin Cloudflare Pages Functions wrappers that delegate to the shared module.
+- `src/index.js` is the Cloudflare Worker entry configured by `wrangler.jsonc`; it imports the same shared handlers, adds the KV-backed `GET /api/tweets` endpoint, serves `public/` through the `ASSETS` binding, and runs worker-first API handling for `/api/*`. Because both runtimes import one module, their output is always identical.
+- Successful `GET` API responses carry `Cache-Control` headers and are stored in Cloudflare's edge cache (`caches.default`), so repeated reads are served from the edge instead of round-tripping to Notion on every request.
 - API responses include CORS headers and UTF-8 content types to support browser consumption and multilingual content.
 
 #### Notion Integration
@@ -124,10 +124,10 @@ flowchart LR
 
 #### Edge API 層
 
-- `functions/api/journal.js` 為 Cloudflare Pages Functions 提供 `GET /api/journal`，用來查詢已設定的 Notion Database。
-- `functions/api/journal/[id].js` 為 Cloudflare Pages Functions 提供 `GET /api/journal/:id`，用來取得單篇 Notion Page 的子區塊內容。
-- `functions/_shared/notion.js` 放置 Notion 相關共用常數，供 Pages Functions 使用。
-- `src/index.js` 是 `wrangler.jsonc` 設定的 Cloudflare Worker 入口；它透過 `ASSETS` binding 提供 `public/` 靜態檔案，並優先處理 `/api/*` API 請求。
+- `functions/_shared/notion.js` 是日誌 API 的**單一真實來源**：包含 Notion 欄位讀取、block→HTML 渲染（段落、標題、清單、連結、富文字樣式、圖片相簿、X/Twitter 推文嵌入），以及 `GET /api/journal` 與 `GET /api/journal/:id` 的請求處理邏輯。
+- `functions/api/journal.js` 與 `functions/api/journal/[id].js` 是 Cloudflare Pages Functions 的薄封裝，直接委派給共用模組。
+- `src/index.js` 是 `wrangler.jsonc` 設定的 Cloudflare Worker 入口；它 import 相同的共用處理邏輯，另外提供以 KV 為基礎的 `GET /api/tweets`，透過 `ASSETS` binding 提供 `public/` 靜態檔案，並優先處理 `/api/*`。由於兩種執行環境都 import 同一份模組，輸出永遠一致。
+- 成功的 `GET` API 回應會帶上 `Cache-Control` 標頭，並存入 Cloudflare 邊緣快取（`caches.default`），讓後續讀取直接由邊緣回應，而非每次都回打 Notion。
 - API 回應包含 CORS 標頭與 UTF-8 Content-Type，以支援瀏覽器存取與多語內容顯示。
 
 #### Notion 整合
