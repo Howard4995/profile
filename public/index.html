@@ -1607,7 +1607,7 @@
             if (page === 'journal') {
                 wrapper.classList.add('top-align');
                 document.body.classList.add('dark-theme');
-                loadJournalEntries();
+                loadJournalEntries().then(loadRemainingJournalBodies);
             } else if (page === 'retweets') {
                 wrapper.classList.add('top-align');
                 document.body.classList.add('dark-theme');
@@ -1917,6 +1917,7 @@
         };
 
         let journalInitialized = false;
+        let journalCards = [];
         const loadJournalEntries = async () => {
             if (journalInitialized) return;
             journalInitialized = true;
@@ -1941,15 +1942,13 @@
                     return;
                 }
 
-                const cards = entries.map((entry) => {
+                journalCards = entries.map((entry) => {
                     const card = renderEntryCard(entry);
                     listEl.appendChild(card);
                     return card;
                 });
-                // 先載入前 4 則內文（優先），再接著載入其餘全部；
-                // 兩段都 await，使日誌全部載完後才換 X（兩者不同時進行）。
-                await Promise.allSettled(cards.slice(0, 4).map(loadEntryBody));
-                await Promise.allSettled(cards.slice(4).map(loadEntryBody));
+                // 只先載入前 4 則內文；其餘由 loadRemainingJournalBodies 於稍後載入。
+                await Promise.allSettled(journalCards.slice(0, 4).map(loadEntryBody));
             } catch (error) {
                 console.error(error);
                 journalInitialized = false; // 允許下次開啟日誌頁時重試
@@ -1961,13 +1960,18 @@
             }
         };
 
+        // 載入前 4 則以外的其餘日誌內文（idempotent，重複呼叫安全）。
+        const loadRemainingJournalBodies = async () => {
+            await Promise.allSettled(journalCards.slice(4).map(loadEntryBody));
+        };
+
         // ========== X 推文（KV 推文 ID + iframe embed + 無限滾動）==========
         let tweetsPage = 0;
         let tweetsTotal = 0;
         let tweetsLoading = false;
         let tweetsInitialized = false;
 
-        const loadTweets = async (reset) => {
+        const loadTweets = async (reset, buildLimit) => {
             if (tweetsLoading) return;
             if (!reset && tweetsInitialized && tweetsPage * 20 >= tweetsTotal) return;
 
@@ -2013,7 +2017,7 @@
                     anchor.textContent = '在 X 上查看推文';
                     listEl.appendChild(anchor);
                 });
-                upgradeTweets(listEl);
+                upgradeTweets(listEl, buildLimit);
 
                 tweetsPage++;
                 if (tweetsPage * 20 < tweetsTotal) {
@@ -2093,12 +2097,12 @@
             anchor.replaceWith(wrap);
         };
 
-        const upgradeTweets = (container) => {
-            const anchors = container.querySelectorAll('a.tweet-embed[data-tweet-id]');
-            anchors.forEach((anchor) => {
-                if (!/^[0-9]+$/.test(anchor.dataset.tweetId || '')) return;
-                buildTweetFrame(anchor);
-            });
+        // limit 省略時建立全部尚未升級的卡片；指定時只建立前 limit 個。
+        const upgradeTweets = (container, limit) => {
+            const anchors = [...container.querySelectorAll('a.tweet-embed[data-tweet-id]')]
+                .filter((anchor) => /^[0-9]+$/.test(anchor.dataset.tweetId || ''));
+            const slice = (limit == null) ? anchors : anchors.slice(0, limit);
+            slice.forEach(buildTweetFrame);
         };
 
         // ========== 圖片燈箱功能 ==========
@@ -2123,9 +2127,11 @@
             }
         });
 
-        // 首頁載入完成後，於背景把整個 X 推文頁（所有分頁 + iframe）自動載入完畢，
-        // 這樣切換到 X 時內容已就緒、不需等待。含安全防護避免錯誤時無限重試。
-        const autoLoadAllTweets = async () => {
+        // 補建 X 第一頁剩餘的 iframe，並續載其餘分頁（每頁全部建立）。
+        // 含安全防護避免錯誤時無限重試。
+        const loadAllRemainingTweets = async () => {
+            const listEl = document.getElementById('tweetsList');
+            if (listEl) upgradeTweets(listEl); // 補建第一頁尚未升級的 iframe
             let guard = 0;
             while (true) {
                 const before = tweetsPage;
@@ -2140,15 +2146,18 @@
         document.addEventListener("DOMContentLoaded", () => {
             document.querySelectorAll('.journal-card').forEach(formatJournalCard);
             upgradeTweets(document); // 升級靜態卡片內的推文嵌入
-            // 日誌內容改為切換到日誌頁時才載入（見 switchPage），避免首屏發出大量 API 請求
+            // 日誌內容改為背景預載（見下方 window load），避免首屏發出大量 API 請求
         });
 
-        // 等首頁資源載入完、瀏覽器空檔時，於背景依序預載內容，避免影響首屏速度：
-        // 先載 Notion 日誌（前 4 則優先、其餘背景全載），再背景把 X 推文全部預載。
+        // 等首頁資源載入完、瀏覽器空檔時，於背景「依序」預載（兩者不同時進行）：
+        // 1) 日誌前 4 則 → 2) 推文前 4 則 → 3) 其餘全部（先日誌、再推文）。
+        // 抓 ID 很便宜（單次 KV JSON），只有建 iframe 受數量節流。
         window.addEventListener('load', () => {
             const start = async () => {
-                await loadJournalEntries();
-                autoLoadAllTweets();
+                await loadJournalEntries();          // 1) 日誌前 4 則
+                await loadTweets(false, 4);          // 2) 推文前 4 則（只建 4 個 iframe）
+                await loadRemainingJournalBodies();  // 3a) 日誌其餘全部
+                await loadAllRemainingTweets();      // 3b) 推文其餘全部
             };
             if ('requestIdleCallback' in window) {
                 requestIdleCallback(() => start(), { timeout: 2000 });
