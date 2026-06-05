@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Howard - 個人頁面</title>
+    <link rel="preload" as="image" href="icon.jpg" fetchpriority="high">
+    <link rel="preconnect" href="https://platform.twitter.com" crossorigin>
+    <link rel="dns-prefetch" href="https://platform.twitter.com">
     <style>
         :root {
             --bg-color: #fdfbf7;
@@ -1041,7 +1044,7 @@
                 <div class="profile-section">
                     <div class="profile-left">
                         <div class="profile-avatar-wrap" aria-label="Howard profile avatar">
-                            <img src="icon.jpg" alt="Howard" class="profile-avatar">
+                            <img src="icon.jpg" alt="Howard" class="profile-avatar" width="120" height="120" decoding="async" fetchpriority="high">
                             <svg class="profile-avatar-cat" viewBox="0 0 120 92" aria-hidden="true">
                                 <path d="M18 56c-5-17 5-33 26-38 4-8 13-15 18-14 3 1 0 10 0 16 9 1 18 4 24 10 7 7 12 17 14 29 12-4 18 0 16 8-2 10-15 18-31 17H47C32 84 22 74 18 56Z" fill="#fff"/>
                                 <path d="M18 56c-5-17 5-33 26-38 4-8 13-15 18-14 3 1 0 10 0 16 9 1 18 4 24 10 7 7 12 17 14 29 12-4 18 0 16 8-2 10-15 18-31 17H47C32 84 22 74 18 56Z" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1604,6 +1607,7 @@
             if (page === 'journal') {
                 wrapper.classList.add('top-align');
                 document.body.classList.add('dark-theme');
+                loadJournalEntries();
             } else if (page === 'retweets') {
                 wrapper.classList.add('top-align');
                 document.body.classList.add('dark-theme');
@@ -1677,7 +1681,7 @@
             const avatarWrap = document.createElement('div');
             avatarWrap.className = 'journal-avatar-wrap';
             avatarWrap.innerHTML = `
-                <img src="icon.jpg" alt="Howard" class="journal-avatar">
+                <img src="icon.jpg" alt="Howard" class="journal-avatar" width="44" height="44" loading="lazy" decoding="async">
                 <div class="journal-badge">
                     <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
@@ -1874,6 +1878,16 @@
             }
         };
 
+        // 只在卡片即將進入可視區時才抓取內文，避免一次對所有日誌發出請求
+        const journalBodyObserver = new IntersectionObserver((entries, obs) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    loadEntryBody(entry.target);
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { rootMargin: '300px' });
+
         const renderEntryCard = (entry) => {
             const card = document.createElement('div');
             card.className = 'journal-card';
@@ -1909,11 +1923,15 @@
             card.appendChild(footer);
 
             formatJournalCard(card);
-            loadEntryBody(card);
+            journalBodyObserver.observe(card);
             return card;
         };
 
+        let journalInitialized = false;
         const loadJournalEntries = async () => {
+            if (journalInitialized) return;
+            journalInitialized = true;
+
             const listEl = document.getElementById('journalList');
             const loadingEl = document.getElementById('journalLoading');
             const emptyEl = document.getElementById('journalEmpty');
@@ -1937,6 +1955,7 @@
                 entries.forEach(entry => listEl.appendChild(renderEntryCard(entry)));
             } catch (error) {
                 console.error(error);
+                journalInitialized = false; // 允許下次開啟日誌頁時重試
                 if (loadingEl) loadingEl.hidden = true;
                 if (emptyEl) {
                     emptyEl.hidden = false;
@@ -2103,7 +2122,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             document.querySelectorAll('.journal-card').forEach(formatJournalCard);
             upgradeTweets(document); // 升級靜態卡片內的推文嵌入
-            loadJournalEntries();
+            // 日誌內容改為切換到日誌頁時才載入（見 switchPage），避免首屏發出大量 API 請求
         });
     </script>
 
