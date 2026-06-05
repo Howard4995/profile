@@ -2074,7 +2074,8 @@
             iframe.src = `${TWEET_FRAME_ORIGIN}/embed/Tweet.html?id=${encodeURIComponent(id)}`
                 + '&theme=dark&dnt=true&width=550&lang=zh-tw';
             iframe.title = 'X 貼文';
-            iframe.loading = 'lazy';
+            // eager：即使 X 分頁仍隱藏，也能在背景預先載入，切換時即時呈現
+            iframe.loading = 'eager';
             iframe.scrolling = 'no';
             iframe.setAttribute('frameborder', '0');
             iframe.setAttribute('allowtransparency', 'true');
@@ -2095,22 +2096,11 @@
             anchor.replaceWith(wrap);
         };
 
-        // 只在推文卡片接近可視區時才建立 iframe，避免按下 X 時一次載入整頁 20 個
-        // platform.twitter.com iframe 造成的明顯卡頓。
-        const tweetUpgradeObserver = new IntersectionObserver((entries, obs) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    obs.unobserve(entry.target);
-                    buildTweetFrame(entry.target);
-                }
-            });
-        }, { rootMargin: '400px' });
-
         const upgradeTweets = (container) => {
             const anchors = container.querySelectorAll('a.tweet-embed[data-tweet-id]');
             anchors.forEach((anchor) => {
                 if (!/^[0-9]+$/.test(anchor.dataset.tweetId || '')) return;
-                tweetUpgradeObserver.observe(anchor);
+                buildTweetFrame(anchor);
             });
         };
 
@@ -2136,25 +2126,34 @@
             }
         });
 
-        // 在使用者表現出意圖（滑過/聚焦/觸碰 X 按鈕）時先暖機推文請求，
-        // 配合 API 的 Cache-Control，按下 X 時即可直接命中快取，消除等待。
-        let tweetsWarmed = false;
-        const warmTweets = () => {
-            if (tweetsWarmed) return;
-            tweetsWarmed = true;
-            fetch('/api/tweets?page=0&limit=20').catch(() => {});
+        // 首頁載入完成後，於背景把整個 X 推文頁（所有分頁 + iframe）自動載入完畢，
+        // 這樣切換到 X 時內容已就緒、不需等待。含安全防護避免錯誤時無限重試。
+        const autoLoadAllTweets = async () => {
+            let guard = 0;
+            while (true) {
+                const before = tweetsPage;
+                await loadTweets();
+                if (!tweetsInitialized) break;             // 載入失敗
+                if (tweetsPage * 20 >= tweetsTotal) break; // 全部載入完成
+                if (tweetsPage === before) break;          // 無進展，避免無限迴圈
+                if (++guard > 200) break;                  // 安全上限
+            }
         };
 
         document.addEventListener("DOMContentLoaded", () => {
             document.querySelectorAll('.journal-card').forEach(formatJournalCard);
             upgradeTweets(document); // 升級靜態卡片內的推文嵌入
             // 日誌內容改為切換到日誌頁時才載入（見 switchPage），避免首屏發出大量 API 請求
+        });
 
-            document.querySelectorAll('[data-page="retweets"]').forEach((btn) => {
-                btn.addEventListener('pointerenter', warmTweets, { once: true });
-                btn.addEventListener('focus', warmTweets, { once: true });
-                btn.addEventListener('touchstart', warmTweets, { once: true, passive: true });
-            });
+        // 等首頁資源載入完、瀏覽器空檔時再於背景載入 X 推文，避免影響首屏載入速度。
+        window.addEventListener('load', () => {
+            const start = () => { autoLoadAllTweets(); };
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(start, { timeout: 2000 });
+            } else {
+                setTimeout(start, 800);
+            }
         });
     </script>
 
