@@ -2727,7 +2727,10 @@
                 persistChatConfig();
                 status.textContent = `✓ 已載入 ${list.length} 個模型`;
             } catch (err) {
-                status.textContent = `⚠️ 獲取失敗：${err.message}（可手動輸入模型名稱）`;
+                const detail = err && err.message ? err.message : String(err);
+                const hint = /fetch|load failed|network/i.test(detail)
+                    ? '無法連線（請重新整理頁面後再試）' : detail;
+                status.textContent = `⚠️ 獲取失敗：${hint}（可手動輸入模型名稱）`;
                 // 失敗時退回可編輯選項，至少能用預設模型
                 if (!select.options.length || select.options[0].value === '') {
                     select.innerHTML = `<option value="${CHAT_DEFAULTS.model}">${CHAT_DEFAULTS.model}</option>`;
@@ -2875,45 +2878,64 @@
                     throw new Error(`HTTP ${resp.status} ${errText.slice(0, 200)}`);
                 }
 
-                const reader = resp.body.getReader();
                 const decoder = new TextDecoder('utf-8');
                 let acc = '';
                 let reasoning = '';
-                let buffer = '';
                 const msgBox = document.getElementById('chatMessages');
 
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop();
+                // 把一段 delta（串流）或 message（非串流）套用到畫面
+                const applyChoice = (choice) => {
+                    const d = choice?.delta || choice?.message || {};
+                    // 推理模型先輸出 reasoning_content（思考），再輸出 content（答案）
+                    const rDelta = d.reasoning_content || '';
+                    if (rDelta && reasoningEl) {
+                        reasoning += rDelta;
+                        reasoningEl.hidden = false;
+                        if (!acc) reasoningEl.open = true; // 思考中先展開，出答案後自動收合
+                        reasoningEl._body.textContent = reasoning;
+                        msgBox.scrollTop = 1e9;
+                    }
+                    const delta = d.content || '';
+                    if (delta) {
+                        if (!acc && reasoningEl) reasoningEl.open = false;
+                        acc += delta;
+                        bubble.classList.remove('typing');
+                        bubble.textContent = acc;
+                        msgBox.scrollTop = 1e9;
+                    }
+                };
+
+                // 解析 SSE 文字片段（可累積使用）
+                const sseBuf = { s: '' };
+                const parseSSE = (chunk) => {
+                    sseBuf.s += chunk;
+                    const lines = sseBuf.s.split('\n');
+                    sseBuf.s = lines.pop();
                     for (const line of lines) {
                         const trimmed = line.trim();
                         if (!trimmed || !trimmed.startsWith('data:')) continue;
                         const data = trimmed.slice(5).trim();
                         if (data === '[DONE]') continue;
-                        try {
-                            const json = JSON.parse(data);
-                            const choiceDelta = json.choices?.[0]?.delta || {};
-                            // 推理模型先輸出 reasoning_content（思考），再輸出 content（答案）
-                            const rDelta = choiceDelta.reasoning_content || '';
-                            if (rDelta && reasoningEl) {
-                                reasoning += rDelta;
-                                reasoningEl.hidden = false;
-                                if (!acc) reasoningEl.open = true; // 思考中先展開，出答案後自動收合
-                                reasoningEl._body.textContent = reasoning;
-                                msgBox.scrollTop = 1e9;
-                            }
-                            const delta = choiceDelta.content || '';
-                            if (delta) {
-                                if (!acc && reasoningEl) reasoningEl.open = false;
-                                acc += delta;
-                                bubble.classList.remove('typing');
-                                bubble.textContent = acc;
-                                msgBox.scrollTop = 1e9;
-                            }
-                        } catch (_) { /* 忽略不完整片段 */ }
+                        try { applyChoice(JSON.parse(data)?.choices?.[0]); } catch (_) { /* 不完整片段 */ }
+                    }
+                };
+
+                // 優先用串流；部分 App 內建瀏覽器/舊版 WebView 不支援 ReadableStream，
+                // 此時退回整段讀取，避免 resp.body.getReader() 直接丟 TypeError。
+                if (resp.body && typeof resp.body.getReader === 'function') {
+                    const reader = resp.body.getReader();
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        parseSSE(decoder.decode(value, { stream: true }));
+                    }
+                } else {
+                    const full = await resp.text();
+                    if (full.includes('data:')) {
+                        parseSSE(full);
+                    } else {
+                        // 伺服器忽略 stream 參數、回傳單一 JSON 的情況
+                        try { applyChoice(JSON.parse(full)?.choices?.[0]); } catch (_) {}
                     }
                 }
 
@@ -2926,7 +2948,10 @@
                 }
             } catch (err) {
                 bubble.classList.remove('typing');
-                bubble.textContent = `⚠️ 發生錯誤：${err.message}`;
+                const detail = err && err.message ? err.message : String(err);
+                const hint = /fetch|load failed|network/i.test(detail)
+                    ? '（無法連線，請確認網路並重新整理頁面後再試）' : '';
+                bubble.textContent = `⚠️ 發生錯誤：${err && err.name ? err.name + ': ' : ''}${detail}${hint}`;
                 bubble.style.color = '#ff6b6b';
             } finally {
                 chatStreaming = false;
