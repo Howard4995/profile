@@ -2771,6 +2771,12 @@
             document.getElementById('chatUseProxy').checked = chatConfig.useProxy !== false;
             updateModelLabel();
 
+            // 設定欄位一改就同步進設定（不必特地按「儲存」），讓金鑰來源一致
+            ['chatBaseUrl', 'chatApiKey'].forEach(id => {
+                document.getElementById(id)?.addEventListener('input', syncChatCredsFromFields);
+            });
+            document.getElementById('chatUseProxy')?.addEventListener('change', syncChatCredsFromFields);
+
             const input = document.getElementById('chatInput');
             input.addEventListener('input', () => { autoGrowChatInput(); updateSendButton(); });
             input.addEventListener('keydown', (e) => {
@@ -2815,9 +2821,8 @@
 
         // 從 API URL 自動獲取可用模型清單（OpenAI /models 格式）
         async function fetchChatModels(force) {
-            const baseUrl = document.getElementById('chatBaseUrl').value.trim().replace(/\/+$/, '') || chatConfig.baseUrl;
-            const apiKey = document.getElementById('chatApiKey').value.trim() || chatConfig.apiKey;
-            const useProxy = document.getElementById('chatUseProxy').checked;
+            syncChatCredsFromFields(); // 以欄位最新值為準，並與聊天共用同一把金鑰
+            const { baseUrl, apiKey, useProxy } = chatConfig;
             const select = document.getElementById('chatModel');
             const status = document.getElementById('chatModelStatus');
             const refreshBtn = document.getElementById('chatModelRefresh');
@@ -2853,8 +2858,9 @@
                 status.textContent = `✓ 已載入 ${list.length} 個模型`;
             } catch (err) {
                 const detail = err && err.message ? err.message : String(err);
-                const hint = /fetch|load failed|network/i.test(detail)
-                    ? '無法連線（請重新整理頁面後再試）' : detail;
+                let hint = detail;
+                if (/401|unauthor/i.test(detail)) hint = '金鑰無效（請確認 API 金鑰是否正確、有無多餘空白）';
+                else if (/fetch|load failed|network/i.test(detail)) hint = '無法連線（請重新整理頁面後再試）';
                 status.textContent = `⚠️ 獲取失敗：${hint}（可手動輸入模型名稱）`;
                 // 失敗時退回可編輯選項，至少能用預設模型
                 if (!select.options.length || select.options[0].value === '') {
@@ -2866,17 +2872,22 @@
             }
         }
 
-        function persistChatConfig() {
-            try { localStorage.setItem(CHAT_CONFIG_KEY, JSON.stringify(chatConfig)); } catch (_) {}
+        // 把設定欄位即時同步進 chatConfig（避免「沒按儲存」造成抓模型與聊天用到不同金鑰）。
+        // 金鑰去除所有空白字元（含貼上時夾帶的換行／全形空白），避免無效 401。
+        function syncChatCredsFromFields() {
+            const baseEl = document.getElementById('chatBaseUrl');
+            const keyEl = document.getElementById('chatApiKey');
+            const proxyEl = document.getElementById('chatUseProxy');
+            if (baseEl) chatConfig.baseUrl = baseEl.value.trim().replace(/\/+$/, '');
+            if (keyEl) chatConfig.apiKey = keyEl.value.replace(/\s+/g, '');
+            if (proxyEl) chatConfig.useProxy = proxyEl.checked;
+            persistChatConfig();
         }
 
+
         function saveChatConfig() {
-            chatConfig = {
-                baseUrl: document.getElementById('chatBaseUrl').value.trim().replace(/\/+$/, ''),
-                apiKey: document.getElementById('chatApiKey').value.trim(),
-                model: document.getElementById('chatModel').value || chatConfig.model || CHAT_DEFAULTS.model,
-                useProxy: document.getElementById('chatUseProxy').checked,
-            };
+            syncChatCredsFromFields();
+            chatConfig.model = document.getElementById('chatModel').value || chatConfig.model || CHAT_DEFAULTS.model;
             persistChatConfig();
             updateModelLabel();
             const hint = document.getElementById('chatComposerHint');
@@ -3103,7 +3114,9 @@
                 bubble.classList.remove('typing');
                 const detail = err && err.message ? err.message : String(err);
                 let hint = '';
-                if (/image input|support image|vision|multimodal/i.test(detail)) {
+                if (/401|unauthor|invalid.*key|api key/i.test(detail)) {
+                    hint = '（金鑰無效或未填妥，請到設定重新確認 API 金鑰）';
+                } else if (/image input|support image|vision|multimodal/i.test(detail)) {
                     hint = '（此模型不支援圖片，請改選多模態模型，例如 mimo-v2-omni）';
                 } else if (/fetch|load failed|network/i.test(detail)) {
                     hint = '（無法連線，請確認網路並重新整理頁面後再試）';
