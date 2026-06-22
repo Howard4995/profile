@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Howard - 個人頁面</title>
+    <link rel="icon" href="icon.jpg">
+    <link rel="apple-touch-icon" href="icon.jpg">
     <link rel="preload" as="image" href="icon.jpg" fetchpriority="high">
     <link rel="preconnect" href="https://platform.twitter.com" crossorigin>
     <link rel="dns-prefetch" href="https://platform.twitter.com">
@@ -648,13 +650,16 @@
             max-height: 400px;
             object-fit: contain;
         }
+        .journal-entry-body h1,
         .journal-entry-body h2,
         .journal-entry-body h3,
         .journal-entry-body h4 {
             color: var(--text-primary);
             margin: 16px 0 8px;
         }
-        .journal-entry-body ul {
+        .journal-entry-body h1 { font-size: 1.45rem; }
+        .journal-entry-body ul,
+        .journal-entry-body ol {
             margin: 0 0 12px;
             padding-left: 22px;
         }
@@ -2082,6 +2087,7 @@
             // 切換頁面
             document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
             const target = document.getElementById('page-' + page);
+            if (!target) return;
             void target.offsetWidth;
             target.classList.add('active');
 
@@ -2208,7 +2214,7 @@
             template.innerHTML = html || '';
 
             // Includes U/S for underline + strikethrough annotations from Notion.
-            const allowedTags = new Set(['P', 'BR', 'H2', 'H3', 'H4', 'UL', 'LI', 'CODE', 'STRONG', 'EM', 'U', 'S', 'A', 'IMG', 'FIGURE', 'FIGCAPTION', 'DIV']);
+            const allowedTags = new Set(['P', 'BR', 'H1', 'H2', 'H3', 'H4', 'UL', 'OL', 'LI', 'CODE', 'STRONG', 'EM', 'U', 'S', 'A', 'IMG', 'FIGURE', 'FIGCAPTION', 'DIV']);
             const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT);
             const nodesToRemove = [];
 
@@ -2300,7 +2306,10 @@
         const entryBodyLoadingHtml = '<p class="journal-entry-loading">載入中...</p>';
 
         const wrapImageGallery = (container) => {
-            const images = [...container.querySelectorAll('img.notion-image')];
+            // Server-rendered entries already wrap images in .notion-gallery; skip
+            // those so we don't build redundant nested galleries.
+            const images = [...container.querySelectorAll('img.notion-image')]
+                .filter((img) => !img.closest('.notion-gallery'));
             if (!images.length) return;
 
             // Group consecutive images (images that are direct siblings, possibly separated only by <br>)

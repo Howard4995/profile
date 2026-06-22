@@ -146,8 +146,8 @@ const renderBlock = (block, entryId) => {
       const content = renderRichText(block.bulleted_list_item?.rich_text || []);
       return `<li>${content}</li>`;
     }
-    case 'ordered_list_item': {
-      const content = renderRichText(block.ordered_list_item?.rich_text || []);
+    case 'numbered_list_item': {
+      const content = renderRichText(block.numbered_list_item?.rich_text || []);
       return `<li>${content}</li>`;
     }
     case 'embed': {
@@ -189,7 +189,7 @@ const blocksToHtml = (blocks, entryId) => {
 
   const flushList = () => {
     if (!listItems.length) return;
-    const tag = listType === 'ordered_list_item' ? 'ol' : 'ul';
+    const tag = listType === 'numbered_list_item' ? 'ol' : 'ul';
     htmlParts.push(`<${tag}>${listItems.join('')}</${tag}>`);
     listItems = [];
     listType = null;
@@ -208,7 +208,7 @@ const blocksToHtml = (blocks, entryId) => {
   };
 
   const isListItem = (block) =>
-    block.type === 'bulleted_list_item' || block.type === 'ordered_list_item';
+    block.type === 'bulleted_list_item' || block.type === 'numbered_list_item';
 
   const pushListItem = (block) => {
     if (!listType) {
