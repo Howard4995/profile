@@ -4,6 +4,7 @@ import {
   journalListResponse,
   journalEntryResponse,
 } from '../functions/_shared/notion.js';
+import { chatProxyResponse } from '../functions/_shared/chat-proxy.js';
 
 const TWEETS_KV_KEY = 'tweet_ids';
 
@@ -67,6 +68,10 @@ const routeApi = async (request, env, pathname) => {
 
   if (pathname === '/api/tweets' || pathname === '/api/tweets/') {
     return handleTweets(request, env);
+  }
+
+  if (pathname === '/api/chat/proxy' || pathname === '/api/chat/proxy/') {
+    return chatProxyResponse(request, env);
   }
 
   return null;

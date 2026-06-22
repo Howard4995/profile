@@ -1088,6 +1088,16 @@
         .chat-model-refresh.spinning svg { animation: chatSpin 0.8s linear infinite; }
         @keyframes chatSpin { to { transform: rotate(360deg); } }
         .chat-model-status { font-size: 0.78rem; color: var(--text-secondary); min-height: 14px; }
+        .chat-proxy-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+        }
+        .chat-proxy-toggle input { width: 16px; height: 16px; accent-color: #10a37f; cursor: pointer; }
         .chat-settings-actions {
             display: flex;
             align-items: center;
@@ -1893,6 +1903,10 @@
                             </div>
                             <span class="chat-model-status" id="chatModelStatus"></span>
                         </div>
+                        <label class="chat-proxy-toggle">
+                            <input type="checkbox" id="chatUseProxy" checked>
+                            <span>使用後端代理（避免 CORS 問題，建議開啟）</span>
+                        </label>
                         <div class="chat-settings-actions">
                             <button class="chat-settings-save" onclick="saveChatConfig()">儲存並獲取模型</button>
                             <span class="chat-settings-hint">設定只會儲存在你的瀏覽器中</span>
@@ -2562,6 +2576,7 @@
             baseUrl: 'https://token-plan-sgp.xiaomimimo.com/v1',
             apiKey: '',
             model: 'gpt-3.5-turbo',
+            useProxy: true,
         };
         let chatConfig = { ...CHAT_DEFAULTS };
         let chatHistory = [];          // [{ role, content }]
@@ -2575,6 +2590,21 @@
             } catch (_) { chatConfig = { ...CHAT_DEFAULTS }; }
         }
 
+        // 統一發送：開啟代理時走同源 /api/chat/proxy（避免 CORS），否則直連
+        function chatApiFetch({ baseUrl, apiKey, path, useProxy, method = 'GET', body }) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+            const init = { method };
+            if (body !== undefined) init.body = body;
+            if (useProxy) {
+                headers['X-Target-Url'] = `${baseUrl}${path}`;
+                init.headers = headers;
+                return fetch('/api/chat/proxy', init);
+            }
+            init.headers = headers;
+            return fetch(`${baseUrl}${path}`, init);
+        }
+
         function initChat() {
             if (chatInitialized) {
                 document.getElementById('chatInput')?.focus();
@@ -2585,6 +2615,7 @@
 
             document.getElementById('chatBaseUrl').value = chatConfig.baseUrl || '';
             document.getElementById('chatApiKey').value = chatConfig.apiKey || '';
+            document.getElementById('chatUseProxy').checked = chatConfig.useProxy !== false;
             updateModelLabel();
 
             const input = document.getElementById('chatInput');
@@ -2633,6 +2664,7 @@
         async function fetchChatModels(force) {
             const baseUrl = document.getElementById('chatBaseUrl').value.trim().replace(/\/+$/, '') || chatConfig.baseUrl;
             const apiKey = document.getElementById('chatApiKey').value.trim() || chatConfig.apiKey;
+            const useProxy = document.getElementById('chatUseProxy').checked;
             const select = document.getElementById('chatModel');
             const status = document.getElementById('chatModelStatus');
             const refreshBtn = document.getElementById('chatModelRefresh');
@@ -2645,9 +2677,7 @@
             status.textContent = '正在獲取模型清單…';
             refreshBtn.classList.add('spinning');
             try {
-                const resp = await fetch(`${baseUrl}/models`, {
-                    headers: { 'Authorization': `Bearer ${apiKey}` },
-                });
+                const resp = await chatApiFetch({ baseUrl, apiKey, path: '/models', useProxy });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const json = await resp.json();
                 const list = (json.data || json.models || [])
@@ -2689,6 +2719,7 @@
                 baseUrl: document.getElementById('chatBaseUrl').value.trim().replace(/\/+$/, ''),
                 apiKey: document.getElementById('chatApiKey').value.trim(),
                 model: document.getElementById('chatModel').value || chatConfig.model || CHAT_DEFAULTS.model,
+                useProxy: document.getElementById('chatUseProxy').checked,
             };
             persistChatConfig();
             updateModelLabel();
@@ -2783,12 +2814,12 @@
             sendBtn.disabled = true;
 
             try {
-                const resp = await fetch(`${chatConfig.baseUrl}/chat/completions`, {
+                const resp = await chatApiFetch({
+                    baseUrl: chatConfig.baseUrl,
+                    apiKey: chatConfig.apiKey,
+                    path: '/chat/completions',
+                    useProxy: chatConfig.useProxy !== false,
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${chatConfig.apiKey}`,
-                    },
                     body: JSON.stringify({
                         model: chatConfig.model,
                         messages: chatHistory,
