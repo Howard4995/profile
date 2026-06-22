@@ -970,6 +970,239 @@
                 color: var(--icon-active);
             }
         }
+
+        /* ========== AI 對話頁 (ChatGPT 風格) ========== */
+        .chat-shell {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+            max-height: calc(100vh - 40px);
+            width: 100%;
+        }
+        .chat-topbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 8px;
+        }
+        .chat-topbar-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+            flex: 1;
+        }
+        .chat-icon-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: var(--surface-color);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .chat-icon-btn:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+        .chat-icon-btn svg { width: 18px; height: 18px; }
+
+        .chat-settings {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .chat-settings-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .chat-settings-field label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+        .chat-settings-field input {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: var(--text-primary);
+            font-size: 0.92rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .chat-settings-field input:focus {
+            border-color: #10a37f;
+        }
+        .chat-settings-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .chat-settings-save {
+            background: #10a37f;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 9px 18px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .chat-settings-save:hover { background: #0e8e6f; }
+        .chat-settings-hint {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            padding: 8px 2px 16px;
+            scroll-behavior: smooth;
+        }
+        .chat-welcome {
+            margin: auto;
+            text-align: center;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 40px 20px;
+        }
+        .chat-welcome-icon {
+            width: 56px; height: 56px;
+            color: #10a37f;
+        }
+        .chat-welcome-icon svg { width: 100%; height: 100%; }
+        .chat-welcome-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .chat-welcome-text { font-size: 0.9rem; max-width: 320px; line-height: 1.6; }
+
+        .chat-msg {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            animation: pageFadeIn 0.35s var(--apple-ease) forwards;
+        }
+        .chat-msg.user { flex-direction: row-reverse; }
+        .chat-avatar {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        .chat-msg.assistant .chat-avatar { background: #10a37f; color: #fff; }
+        .chat-msg.user .chat-avatar { background: var(--border-color); color: var(--text-primary); }
+        .chat-bubble {
+            max-width: min(80%, 640px);
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .chat-msg.assistant .chat-bubble {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-top-left-radius: 6px;
+        }
+        .chat-msg.user .chat-bubble {
+            background: #2f2f33;
+            color: #f1efe8;
+            border-top-right-radius: 6px;
+        }
+        .chat-bubble.typing::after {
+            content: '▍';
+            animation: chatBlink 1s steps(2) infinite;
+            color: var(--text-secondary);
+        }
+        @keyframes chatBlink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .chat-composer {
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        .chat-composer-inner {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 8px 8px 8px 18px;
+        }
+        .chat-composer-inner textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            resize: none;
+            color: var(--text-primary);
+            font-size: 0.98rem;
+            line-height: 1.5;
+            max-height: 140px;
+            font-family: inherit;
+            padding: 6px 0;
+        }
+        .chat-composer-inner textarea::placeholder { color: var(--text-secondary); }
+        .chat-send-btn {
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            border: none;
+            background: var(--text-primary);
+            color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .chat-send-btn:hover { opacity: 0.85; }
+        .chat-send-btn:active { transform: scale(0.92); }
+        .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .chat-send-btn svg { width: 18px; height: 18px; }
+        .chat-composer-hint {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            min-height: 16px;
+            margin-top: 8px;
+        }
+        @media (max-width: 768px) {
+            .chat-shell { height: calc(100vh - 120px); max-height: calc(100vh - 120px); }
+            .chat-bubble { max-width: 85%; }
+        }
     </style>
 </head>
 <body>
@@ -994,6 +1227,9 @@
         </button>
         <button class="menu-item" data-page="retweets" onclick="switchPage('retweets')">
             X 推文
+        </button>
+        <button class="menu-item" data-page="chat" onclick="switchPage('chat')">
+            AI 對話
         </button>
         <div class="menu-divider"></div>
     </nav>
@@ -1029,6 +1265,13 @@
                 <div class="btn-content">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </div>
+            </button>
+            <button class="nav-btn" data-page="chat" onclick="switchPage('chat')">
+                <div class="btn-content">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
                     </svg>
                 </div>
             </button>
@@ -1538,6 +1781,77 @@
                 <div id="tweetsLoadMore" class="tweets-load-more" hidden>載入更多...</div>
             </div>
 
+            <!-- ========== AI 對話頁 (ChatGPT 風格) ========== -->
+            <div class="page-view" id="page-chat">
+                <div class="chat-shell">
+                    <div class="chat-topbar">
+                        <button class="journal-back" onclick="switchPage('profile')" title="返回">
+                            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <div class="chat-topbar-title">AI 對話</div>
+                        <button class="chat-icon-btn" id="chatSettingsBtn" title="設定" onclick="toggleChatSettings()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                        </button>
+                        <button class="chat-icon-btn" id="chatNewBtn" title="新對話" onclick="newChat()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- 設定面板 -->
+                    <div class="chat-settings" id="chatSettings" hidden>
+                        <div class="chat-settings-field">
+                            <label for="chatBaseUrl">API URL (OpenAI 格式)</label>
+                            <input type="text" id="chatBaseUrl" placeholder="https://token-plan-sgp.xiaomimimo.com/v1" autocomplete="off" spellcheck="false">
+                        </div>
+                        <div class="chat-settings-field">
+                            <label for="chatApiKey">API 金鑰</label>
+                            <input type="password" id="chatApiKey" placeholder="sk-..." autocomplete="off" spellcheck="false">
+                        </div>
+                        <div class="chat-settings-field">
+                            <label for="chatModel">模型名稱</label>
+                            <input type="text" id="chatModel" placeholder="gpt-3.5-turbo" autocomplete="off" spellcheck="false">
+                        </div>
+                        <div class="chat-settings-actions">
+                            <button class="chat-settings-save" onclick="saveChatConfig()">儲存設定</button>
+                            <span class="chat-settings-hint">設定只會儲存在你的瀏覽器中</span>
+                        </div>
+                    </div>
+
+                    <!-- 訊息區 -->
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-welcome" id="chatWelcome">
+                            <div class="chat-welcome-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                                </svg>
+                            </div>
+                            <div class="chat-welcome-title">嗨～好久不見 (◕‿◕✿)</div>
+                            <div class="chat-welcome-text">先點右上角 ⚙️ 設定 API URL 與金鑰，就能開始聊天囉～</div>
+                        </div>
+                    </div>
+
+                    <!-- 輸入區 -->
+                    <div class="chat-composer">
+                        <div class="chat-composer-inner">
+                            <textarea id="chatInput" rows="1" placeholder="詢問 ChatGPT" autocomplete="off"></textarea>
+                            <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()" title="送出">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="19" x2="12" y2="5"></line>
+                                    <polyline points="5 12 12 5 19 12"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="chat-composer-hint" id="chatComposerHint"></div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -1612,6 +1926,10 @@
                 wrapper.classList.add('top-align');
                 document.body.classList.add('dark-theme');
                 loadTweets();
+            } else if (page === 'chat') {
+                wrapper.classList.add('top-align');
+                document.body.classList.add('dark-theme');
+                initChat();
             } else {
                 wrapper.classList.remove('top-align');
                 document.body.classList.remove('dark-theme');
@@ -2165,6 +2483,198 @@
                 setTimeout(start, 800);
             }
         });
+
+        // ========== AI 對話 (OpenAI 相容 API) ==========
+        const CHAT_CONFIG_KEY = 'chatConfig.v1';
+        const CHAT_DEFAULTS = {
+            baseUrl: 'https://token-plan-sgp.xiaomimimo.com/v1',
+            apiKey: '',
+            model: 'gpt-3.5-turbo',
+        };
+        let chatConfig = { ...CHAT_DEFAULTS };
+        let chatHistory = [];          // [{ role, content }]
+        let chatInitialized = false;
+        let chatStreaming = false;
+
+        function loadChatConfig() {
+            try {
+                const raw = localStorage.getItem(CHAT_CONFIG_KEY);
+                if (raw) chatConfig = { ...CHAT_DEFAULTS, ...JSON.parse(raw) };
+            } catch (_) { chatConfig = { ...CHAT_DEFAULTS }; }
+        }
+
+        function initChat() {
+            if (chatInitialized) {
+                document.getElementById('chatInput')?.focus();
+                return;
+            }
+            chatInitialized = true;
+            loadChatConfig();
+
+            document.getElementById('chatBaseUrl').value = chatConfig.baseUrl || '';
+            document.getElementById('chatApiKey').value = chatConfig.apiKey || '';
+            document.getElementById('chatModel').value = chatConfig.model || '';
+
+            // 未設定金鑰時自動展開設定面板
+            if (!chatConfig.apiKey) {
+                document.getElementById('chatSettings').hidden = false;
+            }
+
+            const input = document.getElementById('chatInput');
+            input.addEventListener('input', autoGrowChatInput);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendChatMessage();
+                }
+            });
+        }
+
+        function autoGrowChatInput() {
+            const el = document.getElementById('chatInput');
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+        }
+
+        function toggleChatSettings() {
+            const panel = document.getElementById('chatSettings');
+            panel.hidden = !panel.hidden;
+        }
+
+        function saveChatConfig() {
+            chatConfig = {
+                baseUrl: document.getElementById('chatBaseUrl').value.trim().replace(/\/+$/, ''),
+                apiKey: document.getElementById('chatApiKey').value.trim(),
+                model: document.getElementById('chatModel').value.trim() || CHAT_DEFAULTS.model,
+            };
+            try { localStorage.setItem(CHAT_CONFIG_KEY, JSON.stringify(chatConfig)); } catch (_) {}
+            const hint = document.getElementById('chatComposerHint');
+            hint.textContent = '✓ 設定已儲存';
+            setTimeout(() => { if (hint.textContent === '✓ 設定已儲存') hint.textContent = ''; }, 2000);
+            document.getElementById('chatSettings').hidden = true;
+            document.getElementById('chatInput')?.focus();
+        }
+
+        function newChat() {
+            chatHistory = [];
+            const box = document.getElementById('chatMessages');
+            box.innerHTML = `
+                <div class="chat-welcome" id="chatWelcome">
+                    <div class="chat-welcome-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                        </svg>
+                    </div>
+                    <div class="chat-welcome-title">嗨～好久不見 (◕‿◕✿)</div>
+                    <div class="chat-welcome-text">先點右上角 ⚙️ 設定 API URL 與金鑰，就能開始聊天囉～</div>
+                </div>`;
+        }
+
+        function appendChatMessage(role, text) {
+            const box = document.getElementById('chatMessages');
+            document.getElementById('chatWelcome')?.remove();
+            const wrap = document.createElement('div');
+            wrap.className = `chat-msg ${role}`;
+            const avatar = document.createElement('div');
+            avatar.className = 'chat-avatar';
+            avatar.textContent = role === 'user' ? '你' : 'AI';
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble';
+            bubble.textContent = text;
+            wrap.appendChild(avatar);
+            wrap.appendChild(bubble);
+            box.appendChild(wrap);
+            box.scrollTop = box.scrollHeight;
+            return bubble;
+        }
+
+        async function sendChatMessage() {
+            if (chatStreaming) return;
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (!chatConfig.apiKey || !chatConfig.baseUrl) {
+                document.getElementById('chatSettings').hidden = false;
+                document.getElementById('chatComposerHint').textContent = '⚠️ 請先設定 API URL 與金鑰';
+                return;
+            }
+
+            input.value = '';
+            autoGrowChatInput();
+            appendChatMessage('user', text);
+            chatHistory.push({ role: 'user', content: text });
+
+            const bubble = appendChatMessage('assistant', '');
+            bubble.classList.add('typing');
+            chatStreaming = true;
+            const sendBtn = document.getElementById('chatSendBtn');
+            sendBtn.disabled = true;
+
+            try {
+                const resp = await fetch(`${chatConfig.baseUrl}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${chatConfig.apiKey}`,
+                    },
+                    body: JSON.stringify({
+                        model: chatConfig.model,
+                        messages: chatHistory,
+                        stream: true,
+                    }),
+                });
+
+                if (!resp.ok) {
+                    const errText = await resp.text().catch(() => '');
+                    throw new Error(`HTTP ${resp.status} ${errText.slice(0, 200)}`);
+                }
+
+                const reader = resp.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let acc = '';
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (!trimmed || !trimmed.startsWith('data:')) continue;
+                        const data = trimmed.slice(5).trim();
+                        if (data === '[DONE]') continue;
+                        try {
+                            const json = JSON.parse(data);
+                            const delta = json.choices?.[0]?.delta?.content || '';
+                            if (delta) {
+                                acc += delta;
+                                bubble.classList.remove('typing');
+                                bubble.textContent = acc;
+                                document.getElementById('chatMessages').scrollTop = 1e9;
+                            }
+                        } catch (_) { /* 忽略不完整片段 */ }
+                    }
+                }
+
+                if (!acc) {
+                    bubble.classList.remove('typing');
+                    bubble.textContent = '(沒有回應內容)';
+                } else {
+                    chatHistory.push({ role: 'assistant', content: acc });
+                }
+            } catch (err) {
+                bubble.classList.remove('typing');
+                bubble.textContent = `⚠️ 發生錯誤：${err.message}`;
+                bubble.style.color = '#ff6b6b';
+            } finally {
+                chatStreaming = false;
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
     </script>
 
 </body>
