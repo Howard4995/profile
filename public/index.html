@@ -971,48 +971,61 @@
             }
         }
 
-        /* ========== AI 對話頁 (ChatGPT 風格) ========== */
+        /* ========== AI 對話頁 (ChatGPT 現代風格) ========== */
         .chat-shell {
             display: flex;
             flex-direction: column;
             height: calc(100vh - 40px);
             max-height: calc(100vh - 40px);
             width: 100%;
+            max-width: 820px;
+            margin: 0 auto;
         }
         .chat-topbar {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 8px;
+            gap: 8px;
+            padding-bottom: 10px;
+            margin-bottom: 4px;
         }
-        .chat-topbar-title {
-            font-size: 1.25rem;
-            font-weight: 800;
+        .chat-topbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .chat-model-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: transparent;
+            border: none;
             color: var(--text-primary);
-            letter-spacing: -0.5px;
-            flex: 1;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 8px;
+            border-radius: 10px;
+            transition: background 0.2s;
         }
+        .chat-model-pill:hover { background: var(--hover-bg); }
+        .chat-model-pill svg { width: 16px; height: 16px; opacity: 0.6; }
         .chat-icon-btn {
             width: 38px;
             height: 38px;
             border-radius: 50%;
-            border: 1px solid var(--border-color);
-            background: var(--surface-color);
-            color: var(--text-secondary);
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background 0.2s;
             flex-shrink: 0;
         }
-        .chat-icon-btn:hover {
-            background: var(--hover-bg);
-            color: var(--text-primary);
-        }
-        .chat-icon-btn svg { width: 18px; height: 18px; }
+        .chat-icon-btn:hover { background: var(--hover-bg); }
+        .chat-icon-btn svg { width: 20px; height: 20px; }
 
         .chat-settings {
             background: var(--surface-color);
@@ -1024,6 +1037,9 @@
             flex-direction: column;
             gap: 14px;
         }
+        /* 確保 hidden 屬性能覆蓋 flex 顯示 */
+        .chat-settings[hidden],
+        .chat-actions[hidden] { display: none; }
         .chat-settings-field {
             display: flex;
             flex-direction: column;
@@ -1034,7 +1050,8 @@
             font-weight: 700;
             color: var(--text-secondary);
         }
-        .chat-settings-field input {
+        .chat-settings-field input,
+        .chat-settings-field select {
             background: var(--bg-color);
             border: 1px solid var(--border-color);
             border-radius: 10px;
@@ -1043,10 +1060,34 @@
             font-size: 0.92rem;
             outline: none;
             transition: border-color 0.2s;
+            font-family: inherit;
         }
-        .chat-settings-field input:focus {
-            border-color: #10a37f;
+        .chat-settings-field input:focus,
+        .chat-settings-field select:focus { border-color: #10a37f; }
+        .chat-model-row {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
         }
+        .chat-model-row select { flex: 1; min-width: 0; }
+        .chat-model-refresh {
+            flex-shrink: 0;
+            width: 42px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-secondary);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .chat-model-refresh:hover { color: var(--text-primary); background: var(--hover-bg); }
+        .chat-model-refresh svg { width: 17px; height: 17px; }
+        .chat-model-refresh.spinning svg { animation: chatSpin 0.8s linear infinite; }
+        @keyframes chatSpin { to { transform: rotate(360deg); } }
+        .chat-model-status { font-size: 0.78rem; color: var(--text-secondary); min-height: 14px; }
         .chat-settings-actions {
             display: flex;
             align-items: center;
@@ -1075,7 +1116,7 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 6px;
             padding: 8px 2px 16px;
             scroll-behavior: smooth;
         }
@@ -1086,81 +1127,97 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             padding: 40px 20px;
         }
-        .chat-welcome-icon {
-            width: 56px; height: 56px;
-            color: #10a37f;
-        }
-        .chat-welcome-icon svg { width: 100%; height: 100%; }
         .chat-welcome-title {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: 800;
             color: var(--text-primary);
         }
-        .chat-welcome-text { font-size: 0.9rem; max-width: 320px; line-height: 1.6; }
+        .chat-welcome-text { font-size: 0.92rem; max-width: 320px; line-height: 1.6; }
 
+        /* 訊息：使用者=灰色氣泡靠右；AI=純文字無頭像 */
         .chat-msg {
             display: flex;
-            gap: 12px;
-            align-items: flex-start;
+            flex-direction: column;
             animation: pageFadeIn 0.35s var(--apple-ease) forwards;
+            margin: 10px 0;
         }
-        .chat-msg.user { flex-direction: row-reverse; }
-        .chat-avatar {
-            width: 32px; height: 32px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            font-weight: 700;
-        }
-        .chat-msg.assistant .chat-avatar { background: #10a37f; color: #fff; }
-        .chat-msg.user .chat-avatar { background: var(--border-color); color: var(--text-primary); }
-        .chat-bubble {
-            max-width: min(80%, 640px);
-            padding: 12px 16px;
-            border-radius: 18px;
-            font-size: 0.95rem;
-            line-height: 1.65;
+        .chat-msg.user { align-items: flex-end; }
+        .chat-msg.assistant { align-items: stretch; }
+        .chat-msg.user .chat-text {
+            background: #2f2f33;
+            color: #f1efe8;
+            padding: 11px 16px;
+            border-radius: 22px;
+            max-width: 80%;
+            font-size: 0.98rem;
+            line-height: 1.6;
             white-space: pre-wrap;
             word-break: break-word;
         }
-        .chat-msg.assistant .chat-bubble {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
+        .chat-msg.assistant .chat-text {
             color: var(--text-primary);
-            border-top-left-radius: 6px;
+            font-size: 1rem;
+            line-height: 1.75;
+            white-space: pre-wrap;
+            word-break: break-word;
+            padding: 2px 2px;
         }
-        .chat-msg.user .chat-bubble {
-            background: #2f2f33;
-            color: #f1efe8;
-            border-top-right-radius: 6px;
-        }
-        .chat-bubble.typing::after {
+        .chat-text.typing::after {
             content: '▍';
             animation: chatBlink 1s steps(2) infinite;
             color: var(--text-secondary);
         }
         @keyframes chatBlink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+        /* AI 訊息底下的操作列 */
+        .chat-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+            opacity: 0.7;
+        }
+        .chat-action-btn {
+            width: 30px; height: 30px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, color 0.2s;
+        }
+        .chat-action-btn:hover { background: var(--hover-bg); color: var(--text-primary); }
+        .chat-action-btn svg { width: 16px; height: 16px; }
 
         .chat-composer {
-            padding-top: 12px;
-            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
             flex-shrink: 0;
         }
         .chat-composer-inner {
             display: flex;
             align-items: flex-end;
-            gap: 8px;
+            gap: 6px;
             background: var(--surface-color);
             border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 8px 8px 8px 18px;
+            border-radius: 28px;
+            padding: 6px 6px 6px 8px;
         }
+        .chat-plus-btn {
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .chat-plus-btn:hover { background: var(--hover-bg); }
+        .chat-plus-btn svg { width: 22px; height: 22px; }
         .chat-composer-inner textarea {
             flex: 1;
             background: transparent;
@@ -1168,40 +1225,46 @@
             outline: none;
             resize: none;
             color: var(--text-primary);
-            font-size: 0.98rem;
+            font-size: 1rem;
             line-height: 1.5;
             max-height: 140px;
             font-family: inherit;
-            padding: 6px 0;
+            padding: 9px 4px;
         }
         .chat-composer-inner textarea::placeholder { color: var(--text-secondary); }
-        .chat-send-btn {
-            width: 38px; height: 38px;
+        .chat-voice-btn {
+            width: 40px; height: 40px;
             border-radius: 50%;
             border: none;
-            background: var(--text-primary);
-            color: var(--bg-color);
+            background: #0a84ff;
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             flex-shrink: 0;
-            transition: opacity 0.2s, transform 0.1s;
+            transition: background 0.2s, transform 0.1s;
         }
-        .chat-send-btn:hover { opacity: 0.85; }
-        .chat-send-btn:active { transform: scale(0.92); }
-        .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .chat-send-btn svg { width: 18px; height: 18px; }
+        .chat-voice-btn.send-mode { background: var(--text-primary); color: var(--bg-color); }
+        .chat-voice-btn:hover { opacity: 0.9; }
+        .chat-voice-btn:active { transform: scale(0.92); }
+        .chat-voice-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .chat-voice-btn svg { width: 20px; height: 20px; }
+        /* 以 class 控制圖示切換（SVG 不吃 hidden 屬性） */
+        .chat-voice-btn .chat-icon-voice { display: block; }
+        .chat-voice-btn .chat-icon-send { display: none; }
+        .chat-voice-btn.send-mode .chat-icon-voice { display: none; }
+        .chat-voice-btn.send-mode .chat-icon-send { display: block; }
         .chat-composer-hint {
             text-align: center;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: var(--text-secondary);
-            min-height: 16px;
+            min-height: 15px;
             margin-top: 8px;
         }
         @media (max-width: 768px) {
             .chat-shell { height: calc(100vh - 120px); max-height: calc(100vh - 120px); }
-            .chat-bubble { max-width: 85%; }
+            .chat-msg.user .chat-text { max-width: 85%; }
         }
     </style>
 </head>
@@ -1784,23 +1847,27 @@
             <!-- ========== AI 對話頁 (ChatGPT 風格) ========== -->
             <div class="page-view" id="page-chat">
                 <div class="chat-shell">
+                    <!-- 頂部列 -->
                     <div class="chat-topbar">
-                        <button class="journal-back" onclick="switchPage('profile')" title="返回">
-                            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-                        </button>
-                        <div class="chat-topbar-title">AI 對話</div>
-                        <button class="chat-icon-btn" id="chatSettingsBtn" title="設定" onclick="toggleChatSettings()">
+                        <button class="chat-icon-btn" title="返回" onclick="switchPage('profile')">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="3"></circle>
-                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                <polyline points="15 18 9 12 15 6"></polyline>
                             </svg>
                         </button>
-                        <button class="chat-icon-btn" id="chatNewBtn" title="新對話" onclick="newChat()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 20h9"></path>
-                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                            </svg>
+                        <button class="chat-model-pill" id="chatModelPill" onclick="toggleChatSettings()">
+                            <span id="chatModelLabel">ChatGPT</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </button>
+                        <div class="chat-topbar-right">
+                            <button class="chat-icon-btn" title="新對話" onclick="newChat()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 5v14M5 12h14"></path>
+                                </svg>
+                            </button>
+                            <button class="chat-icon-btn" title="設定" onclick="toggleChatSettings()">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- 設定面板 -->
@@ -1814,11 +1881,20 @@
                             <input type="password" id="chatApiKey" placeholder="sk-..." autocomplete="off" spellcheck="false">
                         </div>
                         <div class="chat-settings-field">
-                            <label for="chatModel">模型名稱</label>
-                            <input type="text" id="chatModel" placeholder="gpt-3.5-turbo" autocomplete="off" spellcheck="false">
+                            <label for="chatModel">模型（從 API 自動獲取）</label>
+                            <div class="chat-model-row">
+                                <select id="chatModel"><option value="">儲存設定後自動載入…</option></select>
+                                <button class="chat-model-refresh" id="chatModelRefresh" title="重新獲取模型" onclick="fetchChatModels(true)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="23 4 23 10 17 10"></polyline>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <span class="chat-model-status" id="chatModelStatus"></span>
                         </div>
                         <div class="chat-settings-actions">
-                            <button class="chat-settings-save" onclick="saveChatConfig()">儲存設定</button>
+                            <button class="chat-settings-save" onclick="saveChatConfig()">儲存並獲取模型</button>
                             <span class="chat-settings-hint">設定只會儲存在你的瀏覽器中</span>
                         </div>
                     </div>
@@ -1826,25 +1902,21 @@
                     <!-- 訊息區 -->
                     <div class="chat-messages" id="chatMessages">
                         <div class="chat-welcome" id="chatWelcome">
-                            <div class="chat-welcome-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                                </svg>
-                            </div>
                             <div class="chat-welcome-title">嗨～好久不見 (◕‿◕✿)</div>
-                            <div class="chat-welcome-text">先點右上角 ⚙️ 設定 API URL 與金鑰，就能開始聊天囉～</div>
+                            <div class="chat-welcome-text">今天想聊什麼，我都在～ ฅ( ^ ・ω・ ^ ฅ)</div>
                         </div>
                     </div>
 
                     <!-- 輸入區 -->
                     <div class="chat-composer">
                         <div class="chat-composer-inner">
+                            <button class="chat-plus-btn" title="新對話" onclick="newChat()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+                            </button>
                             <textarea id="chatInput" rows="1" placeholder="詢問 ChatGPT" autocomplete="off"></textarea>
-                            <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()" title="送出">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="12" y1="19" x2="12" y2="5"></line>
-                                    <polyline points="5 12 12 5 19 12"></polyline>
-                                </svg>
+                            <button class="chat-voice-btn" id="chatSendBtn" onclick="sendChatMessage()" title="送出">
+                                <svg class="chat-icon-voice" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="9" width="2" height="6" rx="1"></rect><rect x="9" y="5" width="2" height="14" rx="1"></rect><rect x="13" y="7" width="2" height="10" rx="1"></rect><rect x="17" y="10" width="2" height="4" rx="1"></rect></svg>
+                                <svg class="chat-icon-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                             </button>
                         </div>
                         <div class="chat-composer-hint" id="chatComposerHint"></div>
@@ -2513,21 +2585,37 @@
 
             document.getElementById('chatBaseUrl').value = chatConfig.baseUrl || '';
             document.getElementById('chatApiKey').value = chatConfig.apiKey || '';
-            document.getElementById('chatModel').value = chatConfig.model || '';
-
-            // 未設定金鑰時自動展開設定面板
-            if (!chatConfig.apiKey) {
-                document.getElementById('chatSettings').hidden = false;
-            }
+            updateModelLabel();
 
             const input = document.getElementById('chatInput');
-            input.addEventListener('input', autoGrowChatInput);
+            input.addEventListener('input', () => { autoGrowChatInput(); updateSendButton(); });
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     sendChatMessage();
                 }
             });
+            updateSendButton();
+
+            // 已有金鑰：直接抓模型清單；否則展開設定面板
+            if (chatConfig.apiKey && chatConfig.baseUrl) {
+                fetchChatModels(false);
+            } else {
+                document.getElementById('chatSettings').hidden = false;
+            }
+        }
+
+        function updateModelLabel() {
+            const label = document.getElementById('chatModelLabel');
+            if (label) label.textContent = chatConfig.model || 'ChatGPT';
+        }
+
+        function updateSendButton() {
+            const input = document.getElementById('chatInput');
+            const btn = document.getElementById('chatSendBtn');
+            if (!input || !btn) return;
+            const hasText = input.value.trim().length > 0;
+            btn.classList.toggle('send-mode', hasText);
         }
 
         function autoGrowChatInput() {
@@ -2541,18 +2629,74 @@
             panel.hidden = !panel.hidden;
         }
 
+        // 從 API URL 自動獲取可用模型清單（OpenAI /models 格式）
+        async function fetchChatModels(force) {
+            const baseUrl = document.getElementById('chatBaseUrl').value.trim().replace(/\/+$/, '') || chatConfig.baseUrl;
+            const apiKey = document.getElementById('chatApiKey').value.trim() || chatConfig.apiKey;
+            const select = document.getElementById('chatModel');
+            const status = document.getElementById('chatModelStatus');
+            const refreshBtn = document.getElementById('chatModelRefresh');
+
+            if (!baseUrl || !apiKey) {
+                status.textContent = '請先填入 API URL 與金鑰';
+                return;
+            }
+
+            status.textContent = '正在獲取模型清單…';
+            refreshBtn.classList.add('spinning');
+            try {
+                const resp = await fetch(`${baseUrl}/models`, {
+                    headers: { 'Authorization': `Bearer ${apiKey}` },
+                });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const json = await resp.json();
+                const list = (json.data || json.models || [])
+                    .map(m => (typeof m === 'string' ? m : (m.id || m.name)))
+                    .filter(Boolean)
+                    .sort();
+                if (!list.length) throw new Error('清單為空');
+
+                select.innerHTML = '';
+                list.forEach(id => {
+                    const opt = document.createElement('option');
+                    opt.value = id; opt.textContent = id;
+                    select.appendChild(opt);
+                });
+                // 沿用先前選擇，否則用第一個
+                select.value = list.includes(chatConfig.model) ? chatConfig.model : list[0];
+                chatConfig.model = select.value;
+                updateModelLabel();
+                persistChatConfig();
+                status.textContent = `✓ 已載入 ${list.length} 個模型`;
+            } catch (err) {
+                status.textContent = `⚠️ 獲取失敗：${err.message}（可手動輸入模型名稱）`;
+                // 失敗時退回可編輯選項，至少能用預設模型
+                if (!select.options.length || select.options[0].value === '') {
+                    select.innerHTML = `<option value="${CHAT_DEFAULTS.model}">${CHAT_DEFAULTS.model}</option>`;
+                    select.value = CHAT_DEFAULTS.model;
+                }
+            } finally {
+                refreshBtn.classList.remove('spinning');
+            }
+        }
+
+        function persistChatConfig() {
+            try { localStorage.setItem(CHAT_CONFIG_KEY, JSON.stringify(chatConfig)); } catch (_) {}
+        }
+
         function saveChatConfig() {
             chatConfig = {
                 baseUrl: document.getElementById('chatBaseUrl').value.trim().replace(/\/+$/, ''),
                 apiKey: document.getElementById('chatApiKey').value.trim(),
-                model: document.getElementById('chatModel').value.trim() || CHAT_DEFAULTS.model,
+                model: document.getElementById('chatModel').value || chatConfig.model || CHAT_DEFAULTS.model,
             };
-            try { localStorage.setItem(CHAT_CONFIG_KEY, JSON.stringify(chatConfig)); } catch (_) {}
+            persistChatConfig();
+            updateModelLabel();
             const hint = document.getElementById('chatComposerHint');
             hint.textContent = '✓ 設定已儲存';
             setTimeout(() => { if (hint.textContent === '✓ 設定已儲存') hint.textContent = ''; }, 2000);
-            document.getElementById('chatSettings').hidden = true;
-            document.getElementById('chatInput')?.focus();
+            // 儲存後自動獲取模型清單
+            fetchChatModels(true);
         }
 
         function newChat() {
@@ -2560,32 +2704,58 @@
             const box = document.getElementById('chatMessages');
             box.innerHTML = `
                 <div class="chat-welcome" id="chatWelcome">
-                    <div class="chat-welcome-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                        </svg>
-                    </div>
                     <div class="chat-welcome-title">嗨～好久不見 (◕‿◕✿)</div>
-                    <div class="chat-welcome-text">先點右上角 ⚙️ 設定 API URL 與金鑰，就能開始聊天囉～</div>
+                    <div class="chat-welcome-text">今天想聊什麼，我都在～ ฅ( ^ ・ω・ ^ ฅ)</div>
                 </div>`;
         }
 
+        const CHAT_ICON_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+        const CHAT_ICON_SPEAK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>';
+        const CHAT_ICON_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>';
+
+        // role: 'user' | 'assistant'。回傳文字節點供串流更新
         function appendChatMessage(role, text) {
             const box = document.getElementById('chatMessages');
             document.getElementById('chatWelcome')?.remove();
             const wrap = document.createElement('div');
             wrap.className = `chat-msg ${role}`;
-            const avatar = document.createElement('div');
-            avatar.className = 'chat-avatar';
-            avatar.textContent = role === 'user' ? '你' : 'AI';
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble';
-            bubble.textContent = text;
-            wrap.appendChild(avatar);
-            wrap.appendChild(bubble);
+            const textEl = document.createElement('div');
+            textEl.className = 'chat-text';
+            textEl.textContent = text;
+            wrap.appendChild(textEl);
+
+            if (role === 'assistant') {
+                const actions = document.createElement('div');
+                actions.className = 'chat-actions';
+                actions.hidden = true; // 串流完成後才顯示
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'chat-action-btn';
+                copyBtn.title = '複製';
+                copyBtn.innerHTML = CHAT_ICON_COPY;
+                copyBtn.onclick = () => navigator.clipboard?.writeText(textEl.textContent);
+                const speakBtn = document.createElement('button');
+                speakBtn.className = 'chat-action-btn';
+                speakBtn.title = '朗讀';
+                speakBtn.innerHTML = CHAT_ICON_SPEAK;
+                speakBtn.onclick = () => {
+                    try { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance(textEl.textContent)); } catch (_) {}
+                };
+                const shareBtn = document.createElement('button');
+                shareBtn.className = 'chat-action-btn';
+                shareBtn.title = '分享';
+                shareBtn.innerHTML = CHAT_ICON_SHARE;
+                shareBtn.onclick = () => {
+                    if (navigator.share) navigator.share({ text: textEl.textContent }).catch(() => {});
+                    else navigator.clipboard?.writeText(textEl.textContent);
+                };
+                actions.append(copyBtn, speakBtn, shareBtn);
+                wrap.appendChild(actions);
+                wrap._actions = actions;
+            }
+
             box.appendChild(wrap);
             box.scrollTop = box.scrollHeight;
-            return bubble;
+            return { textEl, wrap };
         }
 
         async function sendChatMessage() {
@@ -2602,10 +2772,11 @@
 
             input.value = '';
             autoGrowChatInput();
+            updateSendButton();
             appendChatMessage('user', text);
             chatHistory.push({ role: 'user', content: text });
 
-            const bubble = appendChatMessage('assistant', '');
+            const { textEl: bubble, wrap } = appendChatMessage('assistant', '');
             bubble.classList.add('typing');
             chatStreaming = true;
             const sendBtn = document.getElementById('chatSendBtn');
@@ -2664,6 +2835,7 @@
                     bubble.textContent = '(沒有回應內容)';
                 } else {
                     chatHistory.push({ role: 'assistant', content: acc });
+                    if (wrap._actions) wrap._actions.hidden = false;
                 }
             } catch (err) {
                 bubble.classList.remove('typing');
@@ -2672,6 +2844,7 @@
             } finally {
                 chatStreaming = false;
                 sendBtn.disabled = false;
+                updateSendButton();
                 input.focus();
             }
         }
