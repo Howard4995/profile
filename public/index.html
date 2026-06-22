@@ -981,6 +981,15 @@
             max-width: 820px;
             margin: 0 auto;
         }
+        /* GPT / AI 對話頁：全黑主題 */
+        body.chat-active { background-color: #000; }
+        #page-chat {
+            --bg-color: #000;
+            --surface-color: #0a0a0a;
+            --border-color: #242424;
+            --hover-bg: rgba(255, 255, 255, 0.07);
+            background: #000;
+        }
         .chat-topbar {
             display: flex;
             align-items: center;
@@ -2082,11 +2091,14 @@
             } else if (page === 'chat') {
                 wrapper.classList.add('top-align');
                 document.body.classList.add('dark-theme');
+                document.body.classList.add('chat-active');
                 initChat();
             } else {
                 wrapper.classList.remove('top-align');
                 document.body.classList.remove('dark-theme');
             }
+            // 離開對話頁時移除全黑背景
+            if (page !== 'chat') document.body.classList.remove('chat-active');
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
