@@ -1181,6 +1181,34 @@
             color: var(--text-secondary);
         }
         @keyframes chatBlink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+        /* 推理模型的「思考過程」可折疊區塊 */
+        .chat-reasoning {
+            margin-bottom: 8px;
+            border-left: 2px solid var(--border-color, #3a3a3f);
+            padding-left: 10px;
+        }
+        .chat-reasoning[hidden] { display: none; }
+        .chat-reasoning > summary {
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            list-style: none;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .chat-reasoning > summary::-webkit-details-marker { display: none; }
+        .chat-reasoning > summary::before { content: '💭'; }
+        .chat-reasoning[open] > summary::after { content: '（收合）'; opacity: 0.6; }
+        .chat-reasoning-body {
+            margin-top: 6px;
+            color: var(--text-secondary);
+            font-size: 0.86rem;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
         /* AI 訊息底下的操作列 */
         .chat-actions {
             display: flex;
@@ -2575,7 +2603,7 @@
         const CHAT_DEFAULTS = {
             baseUrl: 'https://token-plan-sgp.xiaomimimo.com/v1',
             apiKey: '',
-            model: 'gpt-3.5-turbo',
+            model: 'mimo-v2.5-pro',
             useProxy: true,
         };
         let chatConfig = { ...CHAT_DEFAULTS };
@@ -2750,6 +2778,21 @@
             document.getElementById('chatWelcome')?.remove();
             const wrap = document.createElement('div');
             wrap.className = `chat-msg ${role}`;
+            let reasoningEl = null;
+            if (role === 'assistant') {
+                // 推理模型（如 MiMo）會先輸出思考內容，放進可折疊區塊
+                reasoningEl = document.createElement('details');
+                reasoningEl.className = 'chat-reasoning';
+                reasoningEl.hidden = true;
+                const summary = document.createElement('summary');
+                summary.textContent = '思考過程';
+                const rbody = document.createElement('div');
+                rbody.className = 'chat-reasoning-body';
+                reasoningEl.append(summary, rbody);
+                reasoningEl._body = rbody;
+                wrap.appendChild(reasoningEl);
+            }
+
             const textEl = document.createElement('div');
             textEl.className = 'chat-text';
             textEl.textContent = text;
@@ -2786,7 +2829,7 @@
 
             box.appendChild(wrap);
             box.scrollTop = box.scrollHeight;
-            return { textEl, wrap };
+            return { textEl, wrap, reasoningEl };
         }
 
         async function sendChatMessage() {
@@ -2807,7 +2850,7 @@
             appendChatMessage('user', text);
             chatHistory.push({ role: 'user', content: text });
 
-            const { textEl: bubble, wrap } = appendChatMessage('assistant', '');
+            const { textEl: bubble, wrap, reasoningEl } = appendChatMessage('assistant', '');
             bubble.classList.add('typing');
             chatStreaming = true;
             const sendBtn = document.getElementById('chatSendBtn');
@@ -2835,7 +2878,9 @@
                 const reader = resp.body.getReader();
                 const decoder = new TextDecoder('utf-8');
                 let acc = '';
+                let reasoning = '';
                 let buffer = '';
+                const msgBox = document.getElementById('chatMessages');
 
                 while (true) {
                     const { done, value } = await reader.read();
@@ -2850,12 +2895,23 @@
                         if (data === '[DONE]') continue;
                         try {
                             const json = JSON.parse(data);
-                            const delta = json.choices?.[0]?.delta?.content || '';
+                            const choiceDelta = json.choices?.[0]?.delta || {};
+                            // 推理模型先輸出 reasoning_content（思考），再輸出 content（答案）
+                            const rDelta = choiceDelta.reasoning_content || '';
+                            if (rDelta && reasoningEl) {
+                                reasoning += rDelta;
+                                reasoningEl.hidden = false;
+                                if (!acc) reasoningEl.open = true; // 思考中先展開，出答案後自動收合
+                                reasoningEl._body.textContent = reasoning;
+                                msgBox.scrollTop = 1e9;
+                            }
+                            const delta = choiceDelta.content || '';
                             if (delta) {
+                                if (!acc && reasoningEl) reasoningEl.open = false;
                                 acc += delta;
                                 bubble.classList.remove('typing');
                                 bubble.textContent = acc;
-                                document.getElementById('chatMessages').scrollTop = 1e9;
+                                msgBox.scrollTop = 1e9;
                             }
                         } catch (_) { /* 忽略不完整片段 */ }
                     }
