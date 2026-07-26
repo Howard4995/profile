@@ -35,7 +35,7 @@
 
         /* 日誌專屬黑暗/抑鬱主題 */
         body.dark-theme {
-            --bg-color: #1e1e20; /* 溫和高級的深灰（稍微調淺） */
+            --bg-color: #000000; /* 非首頁使用完全黑色背景 */
             --surface-color: #2c2c2e; /* 黑暗卡片底色 */
             --text-primary: #e5e2d9; /* 顯眼但非純白的骨白/象牙色 */
             --text-secondary: #a5a29a; /* 提升對比度後的溫和沙灰色，確保日記內容清晰易讀 */
@@ -838,6 +838,89 @@
             pointer-events: none;
         }
 
+
+        /* ========== 網頁防截圖（奇偶幀閃爍法） ==========
+           限制：此機制只能增加單次截圖成本，無法防止螢幕錄影、連拍拼接或 DevTools 分析。 */
+        .anti-screenshot-host {
+            position: relative;
+            isolation: isolate;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+        .anti-screenshot-host img {
+            -webkit-user-drag: none;
+            user-drag: none;
+        }
+        .anti-screenshot-source-hidden {
+            opacity: 0;
+        }
+        .anti-screenshot-layer {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            will-change: mask-image, opacity;
+        }
+        .anti-screenshot-layer > * {
+            width: 100%;
+            height: 100%;
+        }
+        .anti-screenshot-frame-a,
+        .anti-screenshot-frame-b {
+            opacity: 0;
+        }
+        .anti-screenshot-show-a .anti-screenshot-frame-a,
+        .anti-screenshot-show-b .anti-screenshot-frame-b {
+            opacity: 1;
+        }
+        .anti-screenshot-watermark,
+        .anti-screenshot-fallback::after {
+            content: attr(data-watermark);
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            color: rgba(255, 255, 255, 0.36);
+            font-size: clamp(0.65rem, 2.5vw, 1.2rem);
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-align: center;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+            transform: rotate(-18deg);
+            pointer-events: none;
+            mix-blend-mode: difference;
+        }
+        .anti-screenshot-fallback .anti-screenshot-layer {
+            display: none;
+        }
+        .anti-screenshot-fallback > :not(.anti-screenshot-layer):not(.anti-screenshot-watermark) {
+            opacity: 1;
+        }
+        .anti-screenshot-alert {
+            position: fixed;
+            left: 50%;
+            bottom: 28px;
+            z-index: 10000;
+            transform: translateX(-50%) translateY(20px);
+            opacity: 0;
+            padding: 10px 16px;
+            border-radius: 999px;
+            color: #fff;
+            background: rgba(20, 20, 22, 0.86);
+            box-shadow: 0 8px 28px rgba(0,0,0,0.24);
+            font-size: 0.9rem;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .anti-screenshot-alert.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         /* ========== 手機板液態導覽列 ========== */
         .liquid-nav {
             display: none;
@@ -1437,7 +1520,7 @@
             <div class="page-view active" id="page-profile">
                 <div class="profile-section">
                     <div class="profile-left">
-                        <div class="profile-avatar-wrap" aria-label="Howard profile avatar">
+                        <div class="profile-avatar-wrap" aria-label="Howard profile avatar" data-anti-screenshot data-watermark="Howard4995">
                             <img src="icon.jpg" alt="Howard" class="profile-avatar" width="120" height="120" decoding="async" fetchpriority="high">
                             <svg class="profile-avatar-cat" viewBox="0 0 120 92" aria-hidden="true">
                                 <path d="M18 56c-5-17 5-33 26-38 4-8 13-15 18-14 3 1 0 10 0 16 9 1 18 4 24 10 7 7 12 17 14 29 12-4 18 0 16 8-2 10-15 18-31 17H47C32 84 22 74 18 56Z" fill="#fff"/>
@@ -2025,6 +2108,179 @@
     </div>
 
     <script>
+
+
+        // ========== 網頁防截圖（奇偶幀閃爍法） ==========
+        const AntiScreenshot = (() => {
+            const DEFAULTS = {
+                targetFps: 60,
+                watermark: true,
+                watermarkText: 'Protected',
+                hotkeyDetection: true,
+                dropFrameLimit: 10,
+                dropFrameThresholdMs: 34,
+                patternRows: 18,
+            };
+            const instances = new WeakMap();
+            let hotkeysBound = false;
+            let alertTimer = null;
+
+            const showAlert = (message) => {
+                let alert = document.querySelector('.anti-screenshot-alert');
+                if (!alert) {
+                    alert = document.createElement('div');
+                    alert.className = 'anti-screenshot-alert';
+                    document.body.appendChild(alert);
+                }
+                alert.textContent = message;
+                alert.classList.add('show');
+                clearTimeout(alertTimer);
+                alertTimer = setTimeout(() => alert.classList.remove('show'), 1800);
+            };
+
+            const isScreenshotHotkey = (event) => {
+                const key = (event.key || '').toLowerCase();
+                const code = (event.code || '').toLowerCase();
+                return key === 'printscreen' || code === 'printscreen' ||
+                    (event.metaKey && event.shiftKey && ['3', '4', '5'].includes(key)) ||
+                    (event.shiftKey && event.metaKey && ['digit3', 'digit4', 'digit5'].includes(code)) ||
+                    (event.shiftKey && event.key?.toLowerCase() === 's' && (event.metaKey || event.ctrlKey));
+            };
+
+            const bindHotkeys = () => {
+                if (hotkeysBound) return;
+                hotkeysBound = true;
+                document.addEventListener('keydown', (event) => {
+                    if (!isScreenshotHotkey(event)) return;
+                    document.querySelectorAll('.anti-screenshot-host').forEach((node) => {
+                        node.dataset.watermark = `${node.dataset.watermarkBase || 'Protected'} · ${new Date().toLocaleString()}`;
+                    });
+                    showAlert('此內容已套用防截圖與浮水印保護');
+                }, true);
+            };
+
+            const buildMask = (phase, rows) => {
+                const stripe = 100 / rows;
+                const offset = Math.random() * stripe * 0.35;
+                const start = phase === 0 ? offset : stripe + offset;
+                const solidEnd = start + stripe * 0.92;
+                const cycleEnd = start + stripe * 2;
+                return `repeating-linear-gradient(to bottom, transparent 0%, transparent ${start.toFixed(4)}%, #000 ${start.toFixed(4)}%, #000 ${solidEnd.toFixed(4)}%, transparent ${solidEnd.toFixed(4)}%, transparent ${cycleEnd.toFixed(4)}%)`;
+            };
+
+            const createLayer = (target, className) => {
+                const layer = document.createElement('div');
+                layer.className = `anti-screenshot-layer ${className}`;
+                const clone = target.cloneNode(true);
+                clone.classList.remove('anti-screenshot-source-hidden');
+                clone.removeAttribute('id');
+                layer.appendChild(clone);
+                return layer;
+            };
+
+            const enable = (target, options = {}) => {
+                const el = typeof target === 'string' ? document.querySelector(target) : target;
+                if (!(el instanceof HTMLElement)) return null;
+                if (instances.has(el)) return instances.get(el);
+
+                const config = { ...DEFAULTS, ...options };
+                const host = el.parentElement;
+                if (!host) return null;
+                host.classList.add('anti-screenshot-host');
+                host.dataset.watermarkBase = config.watermarkText || host.dataset.watermark || DEFAULTS.watermarkText;
+                host.dataset.watermark = host.dataset.watermarkBase;
+                el.classList.add('anti-screenshot-source-hidden');
+
+                const layerA = createLayer(el, 'anti-screenshot-frame-a');
+                const layerB = createLayer(el, 'anti-screenshot-frame-b');
+                host.append(layerA, layerB);
+                if (config.watermark) {
+                    const wm = document.createElement('div');
+                    wm.className = 'anti-screenshot-watermark';
+                    host.appendChild(wm);
+                }
+                if (config.hotkeyDetection) bindHotkeys();
+
+                let raf = 0;
+                let visible = false;
+                let last = 0;
+                let frame = 0;
+                let dropped = 0;
+                const minStep = 1000 / Math.max(1, config.targetFps);
+
+                const fallback = () => {
+                    cancelAnimationFrame(raf);
+                    raf = 0;
+                    host.classList.add('anti-screenshot-fallback');
+                    el.classList.remove('anti-screenshot-source-hidden');
+                    showAlert('裝置效能不足，已切換為靜態浮水印模式');
+                };
+
+                const tick = (now) => {
+                    if (!visible || document.hidden || host.classList.contains('anti-screenshot-fallback')) return;
+                    const delta = now - last;
+                    if (!last || delta >= minStep * 0.75) {
+                        frame += 1;
+                        host.classList.toggle('anti-screenshot-show-a', frame % 2 === 0);
+                        host.classList.toggle('anti-screenshot-show-b', frame % 2 === 1);
+                        if (frame % 12 === 0) {
+                            const maskA = buildMask(0, config.patternRows);
+                            const maskB = buildMask(1, config.patternRows);
+                            layerA.style.maskImage = maskA;
+                            layerA.style.webkitMaskImage = maskA;
+                            layerB.style.maskImage = maskB;
+                            layerB.style.webkitMaskImage = maskB;
+                        }
+                        if (delta > config.dropFrameThresholdMs) dropped += 1;
+                        else dropped = Math.max(0, dropped - 1);
+                        if (dropped >= config.dropFrameLimit) return fallback();
+                        last = now;
+                    }
+                    raf = requestAnimationFrame(tick);
+                };
+
+                const start = () => {
+                    if (raf || document.hidden || !visible || host.classList.contains('anti-screenshot-fallback')) return;
+                    last = 0;
+                    raf = requestAnimationFrame(tick);
+                };
+                const stop = () => {
+                    cancelAnimationFrame(raf);
+                    raf = 0;
+                };
+
+                const observer = new IntersectionObserver(([entry]) => {
+                    visible = Boolean(entry?.isIntersecting);
+                    if (visible) start(); else stop();
+                }, { threshold: 0.05 });
+                observer.observe(host);
+                document.addEventListener('visibilitychange', () => document.hidden ? stop() : start());
+                host.addEventListener('contextmenu', (event) => event.preventDefault());
+                host.addEventListener('dragstart', (event) => event.preventDefault());
+
+                const initialMaskA = buildMask(0, config.patternRows);
+                const initialMaskB = buildMask(1, config.patternRows);
+                layerA.style.maskImage = initialMaskA;
+                layerA.style.webkitMaskImage = initialMaskA;
+                layerB.style.maskImage = initialMaskB;
+                layerB.style.webkitMaskImage = initialMaskB;
+
+                const api = { disable: () => {
+                    stop(); observer.disconnect();
+                    layerA.remove(); layerB.remove();
+                    host.querySelector('.anti-screenshot-watermark')?.remove();
+                    host.classList.remove('anti-screenshot-host', 'anti-screenshot-show-a', 'anti-screenshot-show-b', 'anti-screenshot-fallback');
+                    el.classList.remove('anti-screenshot-source-hidden');
+                    instances.delete(el);
+                }};
+                instances.set(el, api);
+                return api;
+            };
+
+            return { enable, disable: (target) => instances.get(typeof target === 'string' ? document.querySelector(target) : target)?.disable() };
+        })();
+        window.AntiScreenshot = AntiScreenshot;
+
         // ========== 選單開關 ==========
         function toggleMenu() {
             const btn = document.getElementById('hamburgerBtn');
@@ -2111,6 +2367,16 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll('[data-anti-screenshot]').forEach((host) => {
+                const target = host.querySelector('img, .journal-card-body, .profile-intro') || host.firstElementChild;
+                if (target) AntiScreenshot.enable(target, {
+                    targetFps: 60,
+                    watermark: true,
+                    watermarkText: host.dataset.watermark || 'Howard4995',
+                    hotkeyDetection: true,
+                });
+            });
+
             // 初始化滑塊
             const initialActive = document.querySelector(".nav-btn.active");
             if (initialActive) {

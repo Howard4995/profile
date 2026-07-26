@@ -73,6 +73,26 @@ This project can be deployed with Cloudflare Pages and Pages Functions, or throu
 
 5. Deploy the project. Cloudflare will serve static files and route `/api/*` requests to the edge API layer before falling back to static assets.
 
+
+### Anti-screenshot protection notes
+
+The profile page includes an opt-in `window.AntiScreenshot` API for specific DOM targets. It creates two complementary sparse render layers, alternates them with `requestAnimationFrame` near the display refresh rate, starts only while the target is visible through `IntersectionObserver`, pauses while `document.hidden` is true, and falls back to a static watermarked view if sustained frame drops are detected.
+
+This is a deterrence mechanism, not a complete DRM system. It is intended to make single still screenshots more likely to capture an incomplete frame, but it cannot prevent screen recording, repeated screenshots, image reconstruction from multiple captures, browser DevTools/Performance analysis, or direct access to original assets already delivered to the browser.
+
+Configuration example:
+
+```js
+window.AntiScreenshot.enable(document.querySelector('.sensitive-image'), {
+  targetFps: 60,
+  watermark: true,
+  watermarkText: 'user@example.com',
+  hotkeyDetection: true,
+});
+```
+
+Call `window.AntiScreenshot.disable(element)` or the handle returned from `enable(element).disable()` to turn protection off for a specific target.
+
 ### Security Notes
 
 - Never expose `NOTION_TOKEN` in frontend code.
@@ -162,6 +182,26 @@ flowchart LR
 | `ALLOWED_ORIGIN` | 否 | CORS 允許來源，未設定時預設為 `*`。 |
 
 5. 部署專案。Cloudflare 會提供靜態檔案，並將 `/api/*` 請求先路由至 Edge API 層，再於非 API 路徑回退至靜態資產。
+
+
+### 防截圖保護注意事項
+
+首頁提供選配的 `window.AntiScreenshot` API，可針對指定 DOM 目標啟用。它會建立兩個互補的稀疏渲染層，透過 `requestAnimationFrame` 盡量貼近螢幕刷新率交替顯示；只有在目標進入可視範圍時才由 `IntersectionObserver` 啟動，並在 `document.hidden` 時暫停。如果偵測到連續掉幀，會自動降級為靜態內容加浮水印。
+
+這是提高單次截圖成本的嚇阻機制，不是完整 DRM。它只能讓單張快照更容易截到殘缺幀，無法阻止螢幕錄影、連續截圖拼接、由多張截圖重建影像、瀏覽器 DevTools／Performance 分析，或直接取得已送到瀏覽器的原始資源。
+
+設定範例：
+
+```js
+window.AntiScreenshot.enable(document.querySelector('.sensitive-image'), {
+  targetFps: 60,
+  watermark: true,
+  watermarkText: 'user@example.com',
+  hotkeyDetection: true,
+});
+```
+
+可呼叫 `window.AntiScreenshot.disable(element)`，或使用 `enable(element).disable()` 回傳的 handle，針對特定目標關閉保護。
 
 ### 安全性注意事項
 
